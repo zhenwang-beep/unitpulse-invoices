@@ -45,6 +45,21 @@ export default function Login() {
     }
   };
 
+  const handleDevLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: "dev@local.test",
+        password: "devlocal123",
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError("Dev login failed: " + err.message);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -141,6 +156,24 @@ export default function Login() {
               </>
             )}
           </button>
+
+          {import.meta.env.DEV && (
+            <>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex-1 h-px bg-[#E0E0E0]" />
+                <span className="text-xs text-[#999] font-mono">DEV ONLY</span>
+                <div className="flex-1 h-px bg-[#E0E0E0]" />
+              </div>
+              <button
+                onClick={handleDevLogin}
+                disabled={isLoading}
+                className="mt-4 w-full bg-[#1a1a1a] text-white py-3 px-6 rounded-lg transition-all duration-200 hover:bg-[#333] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer font-mono text-sm"
+              >
+                <span>⚡</span>
+                <span>Dev Login (skip Google)</span>
+              </button>
+            </>
+          )}
 
           <div className="mt-6 text-center">
             <p
