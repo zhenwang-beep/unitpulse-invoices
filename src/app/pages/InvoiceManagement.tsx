@@ -27,6 +27,7 @@ interface SavedInvoice extends InvoiceData {
   tax: number;
   total: number;
   createdAt: string;
+  createdByEmail?: string;
   updatedAt?: string;
 }
 
@@ -492,10 +493,10 @@ export default function InvoiceManagement() {
               <table className="w-full">
                 <thead className="bg-black text-white">
                   <tr>
-                    {["Invoice ID", "Client", "Issue Date", "Due Date", "Total", "Actions"].map((h, i) => (
+                    {["Invoice ID", "Client", "Issue Date", "Due Date", "Created", "Total", "Actions"].map((h, i) => (
                       <th
                         key={h}
-                        className={`px-6 py-3 text-xs font-semibold uppercase tracking-wider ${i >= 4 ? "text-right" : "text-left"}`}
+                        className={`px-6 py-3 text-xs font-semibold uppercase tracking-wider ${i >= 5 ? "text-right" : "text-left"}`}
                         style={{ fontFamily: "Manrope, sans-serif" }}
                       >{h}</th>
                     ))}
@@ -508,6 +509,12 @@ export default function InvoiceManagement() {
                       <td className="px-6 py-4 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.clientName || "—"}</td>
                       <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.issueDate || "—"}</td>
                       <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.dueDate || "—"}</td>
+                      <td className="px-6 py-4 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
+                        <div className="text-[#1A1A1A]">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "—"}</div>
+                        {invoice.createdByEmail && (
+                          <div className="text-xs text-[#6B6B6B] mt-0.5 truncate max-w-[140px]">{invoice.createdByEmail}</div>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-right font-semibold text-sm text-[#22C55E]" style={{ fontFamily: "Inter, sans-serif" }}>
                         ${invoice.total?.toFixed(2) || "0.00"}
                       </td>

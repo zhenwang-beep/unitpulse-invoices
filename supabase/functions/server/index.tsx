@@ -446,6 +446,7 @@ app.post("/make-server-3c030652/invoices", requireAuth, async (c) => {
     const invoice = {
       id: invoiceId,
       userId,
+      createdByEmail: c.get("userEmail"),
       ...invoiceData,
       subtotal,
       tax,
