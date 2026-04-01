@@ -21,6 +21,7 @@ import { RouterProvider } from "react-router";
 import { router } from "./routes";
 import { AuthProvider } from "./contexts/AuthContext";
 import { UserProfileMenu } from "./components/UserProfileMenu";
+import { Navbar } from "./components/Navbar";
 import { fetchAPI } from "./utils/api";
 
 export interface LineItem {
@@ -244,7 +245,7 @@ export function InvoiceGeneratorPage() {
     clientState: "CA",
     clientZip: "",
     clientCountry: "United States",
-    lineItems: [],
+    lineItems: [{ id: Date.now().toString(), description: "", quantity: 1, unitPrice: 0 }],
     taxPercent: 0,
     notes: "",
   });
@@ -723,8 +724,9 @@ export function InvoiceGeneratorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex flex-col h-screen bg-white">
       <Toaster position="top-center" />
+      <Navbar onOpenSettings={() => setShowSettingsModal(true)} />
 
       {/* Settings Modal */}
       <SettingsModal
@@ -735,7 +737,7 @@ export function InvoiceGeneratorPage() {
       />
 
       {/* Desktop Two-Column Layout */}
-      <div className="hidden lg:grid lg:grid-cols-[45%_55%] h-screen">
+      <div className="hidden lg:grid lg:grid-cols-[45%_55%] flex-1 overflow-hidden">
         {/* Left Panel - Form Editor (Scrollable) */}
         <div className="border-r border-[#E0E0E0] overflow-y-auto">
           <div className="p-8">
@@ -784,7 +786,7 @@ export function InvoiceGeneratorPage() {
       </div>
 
       {/* Mobile Vertical Layout */}
-      <div className="lg:hidden">
+      <div className="lg:hidden flex-1 overflow-y-auto">
         <div className="p-6">
           <FormEditor
             invoiceData={invoiceData}
@@ -930,10 +932,18 @@ function FormEditor({
   setFilteredClients,
 }: FormEditorProps) {
   const navigate = useNavigate();
+  const [activeItemDropdown, setActiveItemDropdown] = useState<string | null>(null);
+
+  const getFilteredSavedItems = (query: string) => {
+    if (!query.trim()) return savedItems;
+    return savedItems.filter(item =>
+      item.description.toLowerCase().includes(query.toLowerCase())
+    );
+  };
   
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-4">
+      <div className="mb-2">
         <h1
           className="text-3xl tracking-tight"
           style={{
@@ -943,32 +953,6 @@ function FormEditor({
         >
           {isEditMode ? "Edit Invoice" : "Invoice Generator"}
         </h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/invoices")}
-            className="flex items-center gap-2 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
-            title="Manage Invoices"
-          >
-            <FileText className="w-5 h-5" />
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: "14px" }}>Invoices</span>
-          </button>
-          <button
-            onClick={() => navigate("/clients")}
-            className="flex items-center gap-2 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
-            title="Manage Clients"
-          >
-            <Users className="w-5 h-5" />
-            <span style={{ fontFamily: "Inter, sans-serif", fontSize: "14px" }}>Clients</span>
-          </button>
-          <button
-            onClick={onOpenSettings}
-            className="p-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
-            title="Company Settings"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-          <UserProfileMenu />
-        </div>
       </div>
 
       {/* Section 1: Invoice Meta */}
@@ -1174,7 +1158,7 @@ function FormEditor({
                       clientState: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent appearance-none"
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent appearance-none cursor-pointer"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {US_STATES.map((state) => (
@@ -1222,7 +1206,7 @@ function FormEditor({
                       clientCountry: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent appearance-none"
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent appearance-none cursor-pointer"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {COUNTRIES.map((country) => (
@@ -1274,20 +1258,46 @@ function FormEditor({
                     </button>
                   </div>
 
-                  <input
-                    type="text"
-                    value={item.description}
-                    onChange={(e) =>
-                      updateLineItem(
-                        item.id,
-                        "description",
-                        e.target.value,
-                      )
-                    }
-                    placeholder="Item description"
-                    className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
-                    style={{ fontFamily: "Inter, sans-serif" }}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => {
+                        updateLineItem(item.id, "description", e.target.value);
+                      }}
+                      onFocus={() => {
+                        if (savedItems.length > 0) setActiveItemDropdown(item.id);
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => setActiveItemDropdown(null), 200);
+                      }}
+                      placeholder="Item description"
+                      className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                      style={{ fontFamily: "Inter, sans-serif" }}
+                    />
+                    {activeItemDropdown === item.id && getFilteredSavedItems(item.description).length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-[#E0E0E0] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {getFilteredSavedItems(item.description).map((savedItem) => (
+                          <div
+                            key={savedItem.id}
+                            onClick={() => {
+                              updateLineItem(item.id, "description", savedItem.description);
+                              updateLineItem(item.id, "unitPrice", savedItem.unitPrice);
+                              setActiveItemDropdown(null);
+                            }}
+                            className="px-4 py-3 hover:bg-[#F5F5F5] cursor-pointer transition-colors border-b border-[#F0F0F0] last:border-b-0 flex items-center justify-between"
+                          >
+                            <span className="text-sm font-medium text-[#1A1A1A]" style={{ fontFamily: "Inter, sans-serif" }}>
+                              {savedItem.description}
+                            </span>
+                            <span className="text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+                              ${savedItem.unitPrice.toFixed(2)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
@@ -1378,68 +1388,11 @@ function FormEditor({
             </div>
           )}
 
-          {/* Quick Add Saved Items Section - After added items */}
-          {savedItems.length > 0 && (
-            <div className={invoiceData.lineItems.length > 0 ? "mt-4" : ""}>
-              <div className="flex items-center justify-between mb-2">
-                <h3
-                  className="uppercase tracking-wider text-xs text-black"
-                  style={{
-                    fontFamily: "Manrope, sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  Quick Add Saved Items
-                </h3>
-                <button
-                  onClick={() => navigate("/items")}
-                  className="text-xs text-[#22C55E] hover:text-[#16A34A] transition-colors cursor-pointer"
-                  style={{
-                    fontFamily: "Manrope, sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  Manage Items →
-                </button>
-              </div>
-              <div className="space-y-2">
-                {savedItems.map(savedItem => (
-                  <button
-                    key={savedItem.id}
-                    onClick={() => {
-                      const newItem: LineItem = {
-                        id: Date.now().toString(),
-                        description: savedItem.description,
-                        quantity: 1,
-                        unitPrice: savedItem.unitPrice,
-                      };
-                      updateInvoice({
-                        lineItems: [...invoiceData.lineItems, newItem],
-                      });
-                      toast.success(`Added "${savedItem.description}" to invoice`);
-                    }}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg hover:bg-[#F0F0F0] transition-colors cursor-pointer"
-                  >
-                    <div className="text-sm font-medium" style={{ fontFamily: "Inter, sans-serif" }}>
-                      {savedItem.description}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
-                        ${savedItem.unitPrice.toFixed(2)}
-                      </div>
-                      <Plus className="w-4 h-4 text-[#22C55E]" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Add Item Button - After saved items */}
+          {/* Add Item Button */}
           <button
             onClick={addLineItem}
             className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-all duration-200 cursor-pointer ${
-              invoiceData.lineItems.length > 0 || savedItems.length > 0 ? "mt-4" : ""
+              invoiceData.lineItems.length > 0 ? "mt-4" : ""
             }`}
             style={{
               fontFamily: "Manrope, sans-serif",
@@ -1496,6 +1449,18 @@ function FormEditor({
                 >
                   Apply Tax
                 </button>
+                {invoiceData.taxPercent > 0 && (
+                  <button
+                    onClick={() => updateInvoice({ taxPercent: 0 })}
+                    className="px-3 py-2 border border-[#E0E0E0] text-[#6B6B6B] rounded-lg hover:bg-[#F5F5F5] transition-all text-sm whitespace-nowrap cursor-pointer"
+                    style={{
+                      fontFamily: "Manrope, sans-serif",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Reset
+                  </button>
+                )}
                 <div className="relative w-24">
                   <input
                     type="number"

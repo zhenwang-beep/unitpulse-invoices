@@ -20,15 +20,15 @@ export const router = createBrowserRouter([
     path: "/",
     element: (
       <ProtectedRoute>
-        <InvoiceGeneratorPage />
+        <InvoiceManagement />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/invoices",
+    path: "/new",
     element: (
       <ProtectedRoute>
-        <InvoiceManagement />
+        <InvoiceGeneratorPage />
       </ProtectedRoute>
     ),
   },

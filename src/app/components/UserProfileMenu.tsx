@@ -39,7 +39,7 @@ export function UserProfileMenu() {
       {/* Profile Button */}
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="flex items-center p-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
       >
         {userAvatar ? (
           <img
@@ -48,7 +48,7 @@ export function UserProfileMenu() {
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-[#22C55E] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[#6366F1] flex items-center justify-center">
             <span
               className="text-white text-sm font-semibold"
               style={{ fontFamily: 'Manrope, sans-serif' }}
@@ -57,20 +57,6 @@ export function UserProfileMenu() {
             </span>
           </div>
         )}
-        <div className="hidden md:block text-left">
-          <p
-            className="text-sm font-medium text-[#1F1F1F]"
-            style={{ fontFamily: 'Inter, sans-serif' }}
-          >
-            {userName}
-          </p>
-          <p
-            className="text-xs text-[#666666]"
-            style={{ fontFamily: 'Inter, sans-serif' }}
-          >
-            {userEmail}
-          </p>
-        </div>
       </button>
 
       {/* Dropdown Menu */}
@@ -95,7 +81,7 @@ export function UserProfileMenu() {
           {/* Sign Out Button */}
           <button
             onClick={handleSignOut}
-            className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-2 text-red-600"
+            className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-2 text-red-600 cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { projectId } from "/utils/supabase/info";
-import { UserProfileMenu } from "../components/UserProfileMenu";
+import { Navbar } from "../components/Navbar";
 import { fetchAPI } from "../utils/api";
 
 interface Client {
@@ -201,17 +201,10 @@ export default function ClientManagement() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <Toaster position="top-center" />
+      <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-[#6B6B6B] hover:text-black mb-4 transition-colors cursor-pointer"
-            style={{ fontFamily: "Inter, sans-serif" }}
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Invoice Generator
-          </button>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1
@@ -227,17 +220,14 @@ export default function ClientManagement() {
                 View, search, and manage all your saved clients
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsAddingNew(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
-                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
-              >
-                <Plus className="w-5 h-5" />
-                Add Client
-              </button>
-              <UserProfileMenu />
-            </div>
+            <button
+              onClick={() => setIsAddingNew(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
+              style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
+            >
+              <Plus className="w-5 h-5" />
+              Add Client
+            </button>
           </div>
 
           {/* Search Bar */}

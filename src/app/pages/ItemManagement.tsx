@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { ArrowLeft, Plus, Pencil, Trash2, X, Save } from "lucide-react";
 import { toast } from "sonner";
 import { projectId } from "/utils/supabase/info";
-import { UserProfileMenu } from "../components/UserProfileMenu";
+import { Navbar } from "../components/Navbar";
 import { fetchAPI } from "../utils/api";
 
 interface SavedItem {
@@ -172,50 +172,39 @@ export default function ItemManagement() {
 
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
+      <Navbar />
       {/* Header */}
       <div className="bg-white border-b border-[#E0E0E0]">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate("/")}
-                className="p-2 hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer"
-                title="Back to Invoice Generator"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1
-                  className="text-3xl tracking-tight"
-                  style={{
-                    fontFamily: "Manrope, sans-serif",
-                    fontWeight: 700,
-                  }}
-                >
-                  Saved Items
-                </h1>
-                <p
-                  className="text-sm text-[#6B6B6B] mt-1"
-                  style={{ fontFamily: "Inter, sans-serif" }}
-                >
-                  Manage your frequently used invoice items
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={openAddModal}
-                className="flex items-center gap-2 px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-all duration-200 cursor-pointer"
+            <div>
+              <h1
+                className="text-3xl tracking-tight"
                 style={{
                   fontFamily: "Manrope, sans-serif",
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
-                <Plus className="w-5 h-5" />
-                Add Item
-              </button>
-              <UserProfileMenu />
+                Saved Items
+              </h1>
+              <p
+                className="text-sm text-[#6B6B6B] mt-1"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
+                Manage your frequently used invoice items
+              </p>
             </div>
+            <button
+              onClick={openAddModal}
+              className="flex items-center gap-2 px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-all duration-200 cursor-pointer"
+              style={{
+                fontFamily: "Manrope, sans-serif",
+                fontWeight: 600,
+              }}
+            >
+              <Plus className="w-5 h-5" />
+              Add Item
+            </button>
           </div>
         </div>
       </div>
