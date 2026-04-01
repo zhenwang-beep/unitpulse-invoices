@@ -14,7 +14,7 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/', label: 'Invoices', icon: LayoutDashboard },
     { path: '/new', label: 'New Invoice', icon: Plus },
     { path: '/clients', label: 'Clients', icon: Users },
     { path: '/items', label: 'Items', icon: Package },

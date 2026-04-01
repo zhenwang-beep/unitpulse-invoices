@@ -261,32 +261,33 @@ export default function InvoiceManagement() {
       <div className="max-w-7xl mx-auto px-4 py-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold" style={{ fontFamily: "Manrope, sans-serif" }}>
-              Dashboard
+            <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "Manrope, sans-serif" }}>
+              Invoices
             </h1>
-            <p className="text-[#6B6B6B] mt-1" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#6B6B6B] mt-1 text-sm sm:text-base" style={{ fontFamily: "Inter, sans-serif" }}>
               Overview of your invoicing activity
             </p>
           </div>
           <button
             onClick={() => navigate("/new")}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
             style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
           >
             <Plus className="w-4 h-4" />
-            New Invoice
+            <span className="hidden sm:inline">New Invoice</span>
+            <span className="sm:hidden text-sm">New</span>
           </button>
         </div>
 
         {/* Time Window Filter */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-1.5 mb-6 overflow-x-auto pb-1 scrollbar-hide">
           {(Object.keys(TIME_WINDOW_LABELS) as TimeWindow[]).map((w) => (
             <button
               key={w}
               onClick={() => setTimeWindow(w)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer whitespace-nowrap flex-shrink-0 ${
                 timeWindow === w
                   ? "bg-[#1A1A1A] text-white"
                   : "bg-white border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5]"
