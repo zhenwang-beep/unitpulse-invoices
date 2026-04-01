@@ -726,7 +726,7 @@ export function InvoiceGeneratorPage() {
   return (
     <div className="flex flex-col h-screen bg-white">
       <Toaster position="top-center" />
-      <Navbar onOpenSettings={() => setShowSettingsModal(true)} />
+      <Navbar />
 
       {/* Settings Modal */}
       <SettingsModal

@@ -4,11 +4,7 @@ import { LayoutDashboard, Plus, Users, Package, Settings, Menu, X } from 'lucide
 import { UserProfileMenu } from './UserProfileMenu';
 import logoPng from '../../assets/logo.svg';
 
-interface NavbarProps {
-  onOpenSettings?: () => void;
-}
-
-export function Navbar({ onOpenSettings }: NavbarProps) {
+export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -18,6 +14,7 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
     { path: '/new', label: 'New Invoice', icon: Plus },
     { path: '/clients', label: 'Clients', icon: Users },
     { path: '/items', label: 'Items', icon: Package },
+    { path: '/settings', label: 'Settings', icon: Settings },
   ];
 
   const handleNav = (path: string) => {
@@ -64,17 +61,8 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
           })}
         </div>
 
-        {/* Right: Settings (desktop) + Profile + Hamburger (mobile) */}
+        {/* Right: Profile + Hamburger (mobile) */}
         <div className="flex items-center gap-1">
-          {onOpenSettings && (
-            <button
-              onClick={onOpenSettings}
-              className="hidden md:flex p-2 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] transition-colors cursor-pointer"
-              title="Company Settings"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-          )}
           <UserProfileMenu />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -108,16 +96,6 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
                 </button>
               );
             })}
-            {onOpenSettings && (
-              <button
-                onClick={() => { onOpenSettings(); setMobileOpen(false); }}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#1A1A1A] hover:bg-[#F5F5F5] transition-colors cursor-pointer text-left w-full"
-                style={{ fontFamily: 'Inter, sans-serif' }}
-              >
-                <Settings className="w-5 h-5" />
-                Settings
-              </button>
-            )}
           </div>
         </div>
       )}
