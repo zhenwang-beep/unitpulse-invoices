@@ -60,16 +60,8 @@ export function Navbar() {
           })}
         </div>
 
-        {/* Right: New Invoice + Profile + Hamburger (mobile) */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/new')}
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer text-sm"
-            style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 600 }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Invoice</span>
-          </button>
+        {/* Right: Profile + Hamburger (mobile) */}
+        <div className="flex items-center gap-1">
           <UserProfileMenu />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
