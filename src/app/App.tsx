@@ -9,6 +9,7 @@ import {
   Upload,
   FileText,
   Users,
+  ArrowLeft,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { useNavigate, useLocation } from "react-router";
@@ -999,7 +1000,14 @@ function FormEditor({
   
   return (
     <div className="space-y-8">
-      <div className="mb-2">
+      <div className="mb-2 flex items-center gap-3">
+        <button
+          onClick={() => navigate("/")}
+          className="p-2 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] transition-colors cursor-pointer"
+          title="Back to Invoices"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <h1
           className="text-3xl tracking-tight"
           style={{
