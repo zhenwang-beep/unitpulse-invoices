@@ -1455,7 +1455,7 @@ function FormEditor({
           {/* Add Item Button */}
           <button
             onClick={addLineItem}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer ${
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-all duration-200 cursor-pointer ${
               invoiceData.lineItems.length > 0 ? "mt-4" : ""
             }`}
             style={{
@@ -1505,7 +1505,7 @@ function FormEditor({
               <div className="flex items-center gap-2">
                 <button
                   onClick={applyTax}
-                  className="px-3 py-2 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all text-sm whitespace-nowrap cursor-pointer"
+                  className="px-3 py-2 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-all text-sm whitespace-nowrap cursor-pointer"
                   style={{
                     fontFamily: "Manrope, sans-serif",
                     fontWeight: 600,
