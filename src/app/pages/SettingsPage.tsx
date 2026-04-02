@@ -112,7 +112,7 @@ export default function SettingsPage() {
   };
 
   const inputClass =
-    "w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent";
+    "w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent";
 
   return (
     <div className="min-h-screen bg-[#FCF9F8]">

@@ -1074,7 +1074,7 @@ function FormEditor({
                     dueDate: getDueDateFromIssueDate(newIssueDate)
                   });
                 }}
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1091,7 +1091,7 @@ function FormEditor({
                 onChange={(e) =>
                   updateInvoice({ dueDate: e.target.value })
                 }
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1135,7 +1135,7 @@ function FormEditor({
                   setTimeout(() => setShowClientDropdown(false), 200);
                 }}
                 placeholder="Enter or select client name"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent cursor-pointer"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent cursor-pointer"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
               {showClientDropdown && filteredClients.length > 0 && (
@@ -1178,7 +1178,7 @@ function FormEditor({
                 updateInvoice({ clientAddress: e.target.value })
               }
               placeholder="Street address"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
               style={{ fontFamily: "Inter, sans-serif" }}
             />
           </div>
@@ -1198,7 +1198,7 @@ function FormEditor({
                   updateInvoice({ clientCity: e.target.value })
                 }
                 placeholder="City"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1217,7 +1217,7 @@ function FormEditor({
                       clientState: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {US_STATES.map((state) => (
@@ -1246,7 +1246,7 @@ function FormEditor({
                   updateInvoice({ clientZip: e.target.value })
                 }
                 placeholder="Zip"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1265,7 +1265,7 @@ function FormEditor({
                       clientCountry: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {COUNTRIES.map((country) => (
@@ -1331,7 +1331,7 @@ function FormEditor({
                         setTimeout(() => setActiveItemDropdown(null), 200);
                       }}
                       placeholder="Item description"
-                      className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                       style={{ fontFamily: "Inter, sans-serif" }}
                     />
                     {activeItemDropdown === item.id && getFilteredSavedItems(item.description).length > 0 && (
@@ -1379,7 +1379,7 @@ function FormEditor({
                             parseFloat(e.target.value) || 0,
                           )
                         }
-                        className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                         style={{ fontFamily: "Inter, sans-serif" }}
                       />
                     </div>
@@ -1414,7 +1414,7 @@ function FormEditor({
                               parseFloat(e.target.value) || 0,
                             )
                           }
-                          className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                          className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                           style={{
                             fontFamily: "Inter, sans-serif",
                           }}
@@ -1533,7 +1533,7 @@ function FormEditor({
                           parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 pr-7 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                    className="w-full px-3 py-2 pr-7 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                     style={{ fontFamily: "Inter, sans-serif" }}
                   />
                   <span
@@ -1603,7 +1603,7 @@ function FormEditor({
           }
           placeholder="Payment due within 30 days"
           rows={3}
-          className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent resize-none"
+          className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent resize-none"
           style={{ fontFamily: "Inter, sans-serif" }}
         />
       </section>
@@ -2052,7 +2052,7 @@ const InvoicePreview = React.forwardRef<
             </button>
             <button
               onClick={onSave}
-              className="px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-all duration-200 cursor-pointer"
+              className="px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer"
               style={{
                 fontFamily: "Manrope, sans-serif",
                 fontWeight: 600,
@@ -2071,7 +2071,7 @@ const InvoicePreview = React.forwardRef<
                 disabled={!isInvoiceSaved}
                 className={`w-full px-6 py-3 text-white rounded-lg transition-all duration-200 ${
                   isInvoiceSaved 
-                    ? 'bg-[#22C55E] hover:bg-[#16A34A] cursor-pointer' 
+                    ? 'bg-[#4A5D23] hover:bg-[#3A4A1B] cursor-pointer'
                     : 'bg-gray-300 cursor-not-allowed opacity-60'
                 }`}
                 style={{

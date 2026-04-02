@@ -176,7 +176,7 @@ export default function ItemManagement() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search items by description..."
-                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>

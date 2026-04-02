@@ -166,7 +166,7 @@ export default function ClientManagement() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, address, or city..."
-                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>

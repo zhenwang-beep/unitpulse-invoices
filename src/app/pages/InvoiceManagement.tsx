@@ -418,7 +418,7 @@ export default function InvoiceManagement() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by invoice ID or client name..."
-                className="w-full pl-10 pr-4 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent text-sm"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
