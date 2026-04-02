@@ -277,7 +277,8 @@ export function InvoiceGeneratorPage() {
   }>>([]);
   
   const [isInvoiceSaved, setIsInvoiceSaved] = useState(false);
-  
+  const [showPostSaveDialog, setShowPostSaveDialog] = useState(false);
+
   const [isEditMode, setIsEditMode] = useState(false);
   
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -477,6 +478,7 @@ export function InvoiceGeneratorPage() {
         
         toast.success(isUpdate ? "Invoice updated successfully!" : "Invoice saved successfully!");
         setIsInvoiceSaved(true);
+        if (!isUpdate) setShowPostSaveDialog(true);
       } else {
         toast.error("Failed to save invoice");
       }
@@ -484,6 +486,26 @@ export function InvoiceGeneratorPage() {
       console.error("Error saving invoice:", error);
       toast.error("Failed to save invoice");
     }
+  };
+
+  const resetInvoice = () => {
+    const today = getTodayDate();
+    setInvoiceData({
+      invoiceId: generateInvoiceId(),
+      issueDate: today,
+      dueDate: getDueDateFromIssueDate(today),
+      clientName: "",
+      clientAddress: "",
+      clientCity: "",
+      clientState: "CA",
+      clientZip: "",
+      clientCountry: "United States",
+      lineItems: [{ id: Date.now().toString(), description: "", quantity: 1, unitPrice: 0 }],
+      taxPercent: 0,
+      notes: "",
+    });
+    setIsInvoiceSaved(false);
+    setShowPostSaveDialog(false);
   };
 
   const updateInvoice = (updates: Partial<InvoiceData>) => {
@@ -724,9 +746,46 @@ export function InvoiceGeneratorPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-[#FCF9F8]">
       <Toaster position="top-center" />
       <Navbar />
+
+      {/* Post-Save Dialog */}
+      {showPostSaveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <h2 className="text-xl mb-1" style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}>
+              Invoice Saved!
+            </h2>
+            <p className="text-sm text-[#6B6B6B] mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+              What would you like to do next?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => { setShowPostSaveDialog(false); handleDownloadPDF(); }}
+                className="w-full px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
+              >
+                Download PDF
+              </button>
+              <button
+                onClick={resetInvoice}
+                className="w-full px-6 py-3 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
+              >
+                Create New Invoice
+              </button>
+              <button
+                onClick={() => setShowPostSaveDialog(false)}
+                className="text-sm text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors cursor-pointer py-1"
+                style={{ fontFamily: "Inter, sans-serif" }}
+              >
+                Stay on this invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Modal */}
       <SettingsModal
@@ -1015,7 +1074,7 @@ function FormEditor({
                     dueDate: getDueDateFromIssueDate(newIssueDate)
                   });
                 }}
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1032,7 +1091,7 @@ function FormEditor({
                 onChange={(e) =>
                   updateInvoice({ dueDate: e.target.value })
                 }
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1076,7 +1135,7 @@ function FormEditor({
                   setTimeout(() => setShowClientDropdown(false), 200);
                 }}
                 placeholder="Enter or select client name"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent cursor-pointer"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent cursor-pointer"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
               {showClientDropdown && filteredClients.length > 0 && (
@@ -1119,7 +1178,7 @@ function FormEditor({
                 updateInvoice({ clientAddress: e.target.value })
               }
               placeholder="Street address"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
               style={{ fontFamily: "Inter, sans-serif" }}
             />
           </div>
@@ -1139,7 +1198,7 @@ function FormEditor({
                   updateInvoice({ clientCity: e.target.value })
                 }
                 placeholder="City"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1158,7 +1217,7 @@ function FormEditor({
                       clientState: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {US_STATES.map((state) => (
@@ -1187,7 +1246,7 @@ function FormEditor({
                   updateInvoice({ clientZip: e.target.value })
                 }
                 placeholder="Zip"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -1206,7 +1265,7 @@ function FormEditor({
                       clientCountry: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent appearance-none cursor-pointer"
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 >
                   {COUNTRIES.map((country) => (
@@ -1272,7 +1331,7 @@ function FormEditor({
                         setTimeout(() => setActiveItemDropdown(null), 200);
                       }}
                       placeholder="Item description"
-                      className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                       style={{ fontFamily: "Inter, sans-serif" }}
                     />
                     {activeItemDropdown === item.id && getFilteredSavedItems(item.description).length > 0 && (
@@ -1320,7 +1379,7 @@ function FormEditor({
                             parseFloat(e.target.value) || 0,
                           )
                         }
-                        className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                        className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                         style={{ fontFamily: "Inter, sans-serif" }}
                       />
                     </div>
@@ -1355,7 +1414,7 @@ function FormEditor({
                               parseFloat(e.target.value) || 0,
                             )
                           }
-                          className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                          className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                           style={{
                             fontFamily: "Inter, sans-serif",
                           }}
@@ -1391,7 +1450,7 @@ function FormEditor({
           {/* Add Item Button */}
           <button
             onClick={addLineItem}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-all duration-200 cursor-pointer ${
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer ${
               invoiceData.lineItems.length > 0 ? "mt-4" : ""
             }`}
             style={{
@@ -1441,7 +1500,7 @@ function FormEditor({
               <div className="flex items-center gap-2">
                 <button
                   onClick={applyTax}
-                  className="px-3 py-2 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-all text-sm whitespace-nowrap cursor-pointer"
+                  className="px-3 py-2 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all text-sm whitespace-nowrap cursor-pointer"
                   style={{
                     fontFamily: "Manrope, sans-serif",
                     fontWeight: 600,
@@ -1474,7 +1533,7 @@ function FormEditor({
                           parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 pr-7 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                    className="w-full px-3 py-2 pr-7 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                     style={{ fontFamily: "Inter, sans-serif" }}
                   />
                   <span
@@ -1512,7 +1571,7 @@ function FormEditor({
                 Total Due
               </span>
               <span
-                className="text-2xl text-[#22C55E]"
+                className="text-2xl text-[#4A5D23]"
                 style={{
                   fontFamily: "Manrope, sans-serif",
                   fontWeight: 700,
@@ -1544,7 +1603,7 @@ function FormEditor({
           }
           placeholder="Payment due within 30 days"
           rows={3}
-          className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent resize-none"
+          className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent resize-none"
           style={{ fontFamily: "Inter, sans-serif" }}
         />
       </section>

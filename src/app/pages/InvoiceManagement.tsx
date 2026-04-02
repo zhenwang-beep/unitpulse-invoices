@@ -83,7 +83,7 @@ export default function InvoiceManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedClient, setSelectedClient] = useState<string>("all");
   const [showClientFilter, setShowClientFilter] = useState(false);
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>("this_month");
+  const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     companyName: "UnitPulse",
     companyAddress: "800 S Harvard Blvd\nLos Angeles, CA 90005\nUnited States",
@@ -255,7 +255,7 @@ export default function InvoiceManagement() {
     val >= 1000 ? `$${(val / 1000).toFixed(1)}k` : `$${val.toFixed(2)}`;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FCF9F8]">
       <Toaster position="top-center" />
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -272,7 +272,7 @@ export default function InvoiceManagement() {
           </div>
           <button
             onClick={() => navigate("/new")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
             style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
           >
             <Plus className="w-4 h-4" />
@@ -306,8 +306,8 @@ export default function InvoiceManagement() {
               <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Total Value
               </span>
-              <div className="w-8 h-8 bg-[#F0FDF4] rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-[#22C55E]" />
+              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-[#4A5D23]" />
               </div>
             </div>
             <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
@@ -323,8 +323,8 @@ export default function InvoiceManagement() {
               <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Invoices
               </span>
-              <div className="w-8 h-8 bg-[#F0FDF4] rounded-lg flex items-center justify-center">
-                <Receipt className="w-4 h-4 text-[#22C55E]" />
+              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
+                <Receipt className="w-4 h-4 text-[#4A5D23]" />
               </div>
             </div>
             <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
@@ -340,8 +340,8 @@ export default function InvoiceManagement() {
               <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 This Month
               </span>
-              <div className="w-8 h-8 bg-[#F0FDF4] rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-[#22C55E]" />
+              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-[#4A5D23]" />
               </div>
             </div>
             <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
@@ -357,8 +357,8 @@ export default function InvoiceManagement() {
               <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Clients
               </span>
-              <div className="w-8 h-8 bg-[#F0FDF4] rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-[#22C55E]" />
+              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-[#4A5D23]" />
               </div>
             </div>
             <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
@@ -396,7 +396,7 @@ export default function InvoiceManagement() {
                     </div>
                     <div className="h-1.5 bg-[#F0F0F0] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#22C55E] rounded-full transition-all duration-500"
+                        className="h-full bg-[#4A5D23] rounded-full transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -418,7 +418,7 @@ export default function InvoiceManagement() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by invoice ID or client name..."
-                className="w-full pl-10 pr-4 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent text-sm"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -428,7 +428,7 @@ export default function InvoiceManagement() {
                 onClick={() => setShowClientFilter(!showClientFilter)}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors cursor-pointer ${
                   selectedClient !== "all"
-                    ? "bg-[#22C55E] text-white border-[#22C55E]"
+                    ? "bg-[#4A5D23] text-white border-[#4A5D23]"
                     : "bg-white border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5]"
                 }`}
                 style={{ fontFamily: "Inter, sans-serif" }}
@@ -441,14 +441,14 @@ export default function InvoiceManagement() {
                   <div className="p-1">
                     <button
                       onClick={() => { setSelectedClient("all"); setShowClientFilter(false); }}
-                      className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === "all" ? "bg-[#F0FDF4] text-[#22C55E]" : "hover:bg-[#F5F5F5]"}`}
+                      className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === "all" ? "bg-[#F5F7EE] text-[#4A5D23]" : "hover:bg-[#F5F5F5]"}`}
                       style={{ fontFamily: "Inter, sans-serif" }}
                     >All Clients</button>
                     {getUniqueClients().map((client) => (
                       <button
                         key={client}
                         onClick={() => { setSelectedClient(client); setShowClientFilter(false); }}
-                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === client ? "bg-[#F0FDF4] text-[#22C55E]" : "hover:bg-[#F5F5F5]"}`}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === client ? "bg-[#F5F7EE] text-[#4A5D23]" : "hover:bg-[#F5F5F5]"}`}
                         style={{ fontFamily: "Inter, sans-serif" }}
                       >{client}</button>
                     ))}
@@ -470,7 +470,7 @@ export default function InvoiceManagement() {
           {/* Table */}
           {loading ? (
             <div className="text-center py-16">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]" />
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A5D23]" />
             </div>
           ) : invoices.length === 0 ? (
             <div className="py-16 text-center">
@@ -479,7 +479,7 @@ export default function InvoiceManagement() {
               <p className="text-sm text-[#6B6B6B] mb-4" style={{ fontFamily: "Inter, sans-serif" }}>Create your first invoice to see it here</p>
               <button
                 onClick={() => navigate("/new")}
-                className="bg-[#22C55E] text-white px-5 py-2 rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer text-sm"
+                className="bg-[#4A5D23] text-white px-5 py-2 rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer text-sm"
                 style={{ fontFamily: "Inter, sans-serif", fontWeight: 500 }}
               >Create Invoice</button>
             </div>
@@ -494,7 +494,7 @@ export default function InvoiceManagement() {
               <table className="w-full">
                 <thead className="bg-black text-white">
                   <tr>
-                    {["Invoice ID", "Client", "Issue Date", "Due Date", "Created", "Total", "Actions"].map((h, i) => (
+                    {["Invoice ID", "Client", "Issue Date", "Due Date", "Created By", "Total", "Actions"].map((h, i) => (
                       <th
                         key={h}
                         className={`px-6 py-3 text-xs font-semibold uppercase tracking-wider ${i >= 5 ? "text-right" : "text-left"}`}
@@ -511,17 +511,15 @@ export default function InvoiceManagement() {
                       <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.issueDate || "—"}</td>
                       <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.dueDate || "—"}</td>
                       <td className="px-6 py-4 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-                        <div className="text-[#1A1A1A]">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "—"}</div>
-                        {invoice.createdByEmail && (
-                          <div className="text-xs text-[#6B6B6B] mt-0.5 truncate max-w-[140px]">{invoice.createdByEmail}</div>
-                        )}
+                        <div className="text-[#1A1A1A] text-xs truncate max-w-[140px]">{invoice.createdByEmail || "—"}</div>
+                        <div className="text-xs text-[#6B6B6B] mt-0.5">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "—"}</div>
                       </td>
-                      <td className="px-6 py-4 text-right font-semibold text-sm text-[#22C55E]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <td className="px-6 py-4 text-right font-semibold text-sm text-[#4A5D23]" style={{ fontFamily: "Inter, sans-serif" }}>
                         ${invoice.total?.toFixed(2) || "0.00"}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => editInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-[#22C55E] hover:bg-[#F0FDF4] rounded transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
+                          <button onClick={() => editInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
                           <button onClick={() => downloadInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Download"><Download className="w-4 h-4" /></button>
                           <button onClick={() => deleteInvoice(invoice.id)} className="p-2 text-[#6B6B6B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
                         </div>

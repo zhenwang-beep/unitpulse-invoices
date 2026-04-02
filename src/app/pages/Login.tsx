@@ -26,7 +26,7 @@ export default function Login() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-[#22C55E] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#4A5D23] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -118,7 +118,7 @@ export default function Login() {
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full bg-white border-2 border-[#E0E0E0] text-[#1F1F1F] py-3 px-6 rounded-lg transition-all duration-200 hover:border-[#22C55E] hover:bg-[#F0FDF4] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 cursor-pointer"
+            className="w-full bg-white border-2 border-[#E0E0E0] text-[#1F1F1F] py-3 px-6 rounded-lg transition-all duration-200 hover:border-[#4A5D23] hover:bg-[#F5F7EE] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 cursor-pointer"
             style={{
               fontFamily: "Inter, sans-serif",
               fontWeight: 500,
@@ -188,7 +188,7 @@ export default function Login() {
 
         {/* Info Box */}
         <div
-          className="mt-6 p-4 bg-[#F0FDF4] border border-[#22C55E] rounded-lg"
+          className="mt-6 p-4 bg-[#F5F7EE] border border-[#4A5D23] rounded-lg"
           style={{ fontFamily: "Inter, sans-serif" }}
         >
           <p className="text-sm text-[#166534]">
@@ -201,7 +201,7 @@ export default function Login() {
               href="https://supabase.com/docs/guides/auth/social-login/auth-google"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-[#22C55E]"
+              className="underline hover:text-[#4A5D23]"
             >
               supabase.com/docs/guides/auth/social-login/auth-google
             </a>

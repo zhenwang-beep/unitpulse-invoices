@@ -49,7 +49,7 @@ export function Navbar() {
                 onClick={() => navigate(path)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-[#F0FDF4] text-[#16A34A]'
+                    ? 'bg-[#F5F7EE] text-[#4A5D23]'
                     : 'text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#1A1A1A]'
                 }`}
                 style={{ fontFamily: 'Inter, sans-serif' }}
@@ -86,7 +86,7 @@ export function Navbar() {
                   onClick={() => handleNav(path)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer text-left w-full ${
                     isActive
-                      ? 'bg-[#F0FDF4] text-[#16A34A]'
+                      ? 'bg-[#F5F7EE] text-[#4A5D23]'
                       : 'text-[#1A1A1A] hover:bg-[#F5F5F5]'
                   }`}
                   style={{ fontFamily: 'Inter, sans-serif' }}

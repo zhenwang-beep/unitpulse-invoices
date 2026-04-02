@@ -137,7 +137,7 @@ export default function ItemManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FCF9F8]">
       <Toaster position="top-center" />
       <Navbar />
 
@@ -158,7 +158,7 @@ export default function ItemManagement() {
             </div>
             <button
               onClick={() => { setFormData({ description: "", unitPrice: 0 }); setShowAddModal(true); }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function ItemManagement() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search items by description..."
-                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -199,7 +199,7 @@ export default function ItemManagement() {
         {/* Content */}
         {loading ? (
           <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]" />
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A5D23]" />
           </div>
         ) : items.length === 0 ? (
           <div className="bg-white rounded-lg border border-[#E0E0E0] p-12 text-center">
@@ -212,7 +212,7 @@ export default function ItemManagement() {
             </p>
             <button
               onClick={() => { setFormData({ description: "", unitPrice: 0 }); setShowAddModal(true); }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-5 h-5" />
@@ -255,7 +255,7 @@ export default function ItemManagement() {
                             type="text"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                            className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                             style={{ fontFamily: "Inter, sans-serif" }}
                           />
                         ) : (
@@ -273,7 +273,7 @@ export default function ItemManagement() {
                                 step="0.01"
                                 value={formData.unitPrice}
                                 onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })}
-                                className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                                className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                                 style={{ fontFamily: "Inter, sans-serif" }}
                               />
                             </div>
@@ -286,7 +286,7 @@ export default function ItemManagement() {
                         <div className="flex items-center justify-end gap-2">
                           {editingItem?.id === item.id ? (
                             <>
-                              <button onClick={handleUpdateItem} className="p-2 text-[#22C55E] hover:bg-[#F0FDF4] rounded-lg transition-colors cursor-pointer" title="Save">
+                              <button onClick={handleUpdateItem} className="p-2 text-[#4A5D23] hover:bg-[#F5F7EE] rounded-lg transition-colors cursor-pointer" title="Save">
                                 <Save className="w-4 h-4" />
                               </button>
                               <button onClick={cancelEdit} className="p-2 text-[#6B6B6B] hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer" title="Cancel">
@@ -336,7 +336,7 @@ export default function ItemManagement() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="e.g. Web Development"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                   autoFocus
                 />
@@ -354,7 +354,7 @@ export default function ItemManagement() {
                     value={formData.unitPrice || ""}
                     onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })}
                     placeholder="0.00"
-                    className="w-full pl-8 pr-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                    className="w-full pl-8 pr-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                     style={{ fontFamily: "Inter, sans-serif" }}
                   />
                 </div>
@@ -370,7 +370,7 @@ export default function ItemManagement() {
               </button>
               <button
                 onClick={handleAddItem}
-                className="flex-1 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer font-medium"
+                className="flex-1 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer font-medium"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Add Item

@@ -127,7 +127,7 @@ export default function ClientManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FCF9F8]">
       <Toaster position="top-center" />
       <Navbar />
 
@@ -148,7 +148,7 @@ export default function ClientManagement() {
             </div>
             <button
               onClick={() => { setNewClient(emptyClient); setShowAddModal(true); }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-4 h-4" />
@@ -166,7 +166,7 @@ export default function ClientManagement() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, address, or city..."
-                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
                 style={{ fontFamily: "Inter, sans-serif" }}
               />
             </div>
@@ -189,7 +189,7 @@ export default function ClientManagement() {
         {/* Content */}
         {loading ? (
           <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#22C55E]" />
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A5D23]" />
           </div>
         ) : clients.length === 0 ? (
           <div className="bg-white rounded-lg border border-[#E0E0E0] p-12 text-center">
@@ -202,7 +202,7 @@ export default function ClientManagement() {
             </p>
             <button
               onClick={() => { setNewClient(emptyClient); setShowAddModal(true); }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-5 h-5" />
@@ -247,14 +247,14 @@ export default function ClientManagement() {
                                 type="text"
                                 value={editingClient[field] as string}
                                 onChange={(e) => setEditingClient({ ...editingClient, [field]: e.target.value })}
-                                className="w-full px-3 py-1.5 border border-[#E0E0E0] rounded focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                                className="w-full px-3 py-1.5 border border-[#E0E0E0] rounded focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                                 style={{ fontFamily: "Inter, sans-serif" }}
                               />
                             </td>
                           ))}
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => saveClient(editingClient)} className="p-2 text-[#22C55E] hover:bg-[#F0FDF4] rounded transition-colors cursor-pointer" title="Save">
+                              <button onClick={() => saveClient(editingClient)} className="p-2 text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Save">
                                 <Check className="w-4 h-4" />
                               </button>
                               <button onClick={() => setEditingClient(null)} className="p-2 text-[#6B6B6B] hover:bg-[#F5F5F5] rounded transition-colors cursor-pointer" title="Cancel">
@@ -272,7 +272,7 @@ export default function ClientManagement() {
                           <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{client.clientZip || "—"}</td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => setEditingClient({ ...client })} className="p-2 text-[#6B6B6B] hover:text-[#22C55E] hover:bg-[#F0FDF4] rounded transition-colors cursor-pointer" title="Edit">
+                              <button onClick={() => setEditingClient({ ...client })} className="p-2 text-[#6B6B6B] hover:text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Edit">
                                 <Edit className="w-4 h-4" />
                               </button>
                               <button onClick={() => handleDeleteClient(client.id)} className="p-2 text-[#6B6B6B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete">
@@ -313,7 +313,7 @@ export default function ClientManagement() {
                   value={newClient.clientName}
                   onChange={(e) => setNewClient({ ...newClient, clientName: e.target.value })}
                   placeholder="e.g. Acme Corp"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                   autoFocus
                 />
@@ -325,7 +325,7 @@ export default function ClientManagement() {
                   value={newClient.clientAddress}
                   onChange={(e) => setNewClient({ ...newClient, clientAddress: e.target.value })}
                   placeholder="Street address"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 />
               </div>
@@ -336,7 +336,7 @@ export default function ClientManagement() {
                   value={newClient.clientCity}
                   onChange={(e) => setNewClient({ ...newClient, clientCity: e.target.value })}
                   placeholder="City"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 />
               </div>
@@ -347,7 +347,7 @@ export default function ClientManagement() {
                   value={newClient.clientState}
                   onChange={(e) => setNewClient({ ...newClient, clientState: e.target.value })}
                   placeholder="State"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 />
               </div>
@@ -358,7 +358,7 @@ export default function ClientManagement() {
                   value={newClient.clientZip}
                   onChange={(e) => setNewClient({ ...newClient, clientZip: e.target.value })}
                   placeholder="Zip"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 />
               </div>
@@ -369,7 +369,7 @@ export default function ClientManagement() {
                   value={newClient.clientCountry}
                   onChange={(e) => setNewClient({ ...newClient, clientCountry: e.target.value })}
                   placeholder="Country"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E]"
+                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
                   style={{ fontFamily: "Inter, sans-serif" }}
                 />
               </div>
@@ -384,7 +384,7 @@ export default function ClientManagement() {
               </button>
               <button
                 onClick={addNewClient}
-                className="flex-1 px-4 py-2.5 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-colors cursor-pointer font-medium"
+                className="flex-1 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer font-medium"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Add Client

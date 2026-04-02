@@ -214,7 +214,7 @@ export function SettingsModal({
                 }))
               }
               placeholder="Your Company Name"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
               style={{ fontFamily: "Inter, sans-serif" }}
             />
           </div>
@@ -237,7 +237,7 @@ export function SettingsModal({
               }
               placeholder="Street Address&#10;City, State ZIP&#10;Country"
               rows={4}
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent resize-none"
+              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent resize-none"
               style={{ fontFamily: "Inter, sans-serif" }}
             />
           </div>
@@ -260,7 +260,7 @@ export function SettingsModal({
                 }))
               }
               placeholder="yourcompany@example.com"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
               style={{ fontFamily: "Inter, sans-serif" }}
             />
           </div>
@@ -283,7 +283,7 @@ export function SettingsModal({
                 }))
               }
               placeholder="(123) 456-7890"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:border-transparent"
+              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
               style={{ fontFamily: "Inter, sans-serif" }}
             />
           </div>
@@ -303,7 +303,7 @@ export function SettingsModal({
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 px-6 py-3 bg-[#22C55E] text-white rounded-lg hover:bg-[#16A34A] transition-all duration-200 cursor-pointer"
+            className="flex-1 px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer"
             style={{
               fontFamily: "Manrope, sans-serif",
               fontWeight: 700,

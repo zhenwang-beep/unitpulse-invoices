@@ -112,10 +112,10 @@ export default function SettingsPage() {
   };
 
   const inputClass =
-    "w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A34A] focus:border-transparent";
+    "w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent";
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[#FCF9F8]">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Header */}
@@ -235,7 +235,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full px-6 py-3 bg-[#16A34A] text-white rounded-lg hover:bg-[#15803D] transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors disabled:opacity-50 cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
               >
                 {saving ? "Saving..." : "Save Changes"}
