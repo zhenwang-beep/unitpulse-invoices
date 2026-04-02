@@ -485,6 +485,7 @@ app.put("/make-server-3c030652/invoices/:id", requireAuth, async (c) => {
     const invoice = {
       id,
       userId,
+      createdByEmail: existingInvoice?.createdByEmail || c.get("userEmail"),
       ...invoiceData,
       subtotal,
       tax,

@@ -10,6 +10,8 @@ import {
   FileText,
   Users,
   ArrowLeft,
+  Eye,
+  Download,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { useNavigate, useLocation } from "react-router";
@@ -837,68 +839,145 @@ export function InvoiceGeneratorPage() {
               onDownload={handleDownloadPDF}
               onSave={() => setShowSaveConfirmModal(true)}
               isInvoiceSaved={isInvoiceSaved}
+              hideEditButton={true}
+              onCancel={() => navigate("/")}
             />
           </div>
         </div>
       </div>
 
       {/* Mobile Vertical Layout */}
-      <div className="lg:hidden flex-1 overflow-y-auto">
-        <div className="p-6">
-          <FormEditor
-            invoiceData={invoiceData}
-            updateInvoice={updateInvoice}
-            updateLineItem={updateLineItem}
-            addLineItem={addLineItem}
-            removeLineItem={removeLineItem}
-            generateInvoiceId={generateInvoiceId}
-            calculateSubtotal={calculateSubtotal}
-            calculateTax={calculateTax}
-            calculateTotal={calculateTotal}
-            onOpenSettings={() => setShowSettingsModal(true)}
-            applyTax={applyTax}
-            isMobile={true}
-            isEditMode={isEditMode}
-            saveItem={saveItem}
-            savedItems={savedItems}
-            savedClients={savedClients}
-            handleClientNameChange={handleClientNameChange}
-            selectClient={selectClient}
-            showClientDropdown={showClientDropdown}
-            setShowClientDropdown={setShowClientDropdown}
-            filteredClients={filteredClients}
-            setFilteredClients={setFilteredClients}
-          />
-
+      <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6 pb-2">
+            <FormEditor
+              invoiceData={invoiceData}
+              updateInvoice={updateInvoice}
+              updateLineItem={updateLineItem}
+              addLineItem={addLineItem}
+              removeLineItem={removeLineItem}
+              generateInvoiceId={generateInvoiceId}
+              calculateSubtotal={calculateSubtotal}
+              calculateTax={calculateTax}
+              calculateTotal={calculateTotal}
+              onOpenSettings={() => setShowSettingsModal(true)}
+              applyTax={applyTax}
+              isMobile={true}
+              isEditMode={isEditMode}
+              saveItem={saveItem}
+              savedItems={savedItems}
+              savedClients={savedClients}
+              handleClientNameChange={handleClientNameChange}
+              selectClient={selectClient}
+              showClientDropdown={showClientDropdown}
+              setShowClientDropdown={setShowClientDropdown}
+              filteredClients={filteredClients}
+              setFilteredClients={setFilteredClients}
+            />
+          </div>
+        </div>
+        {/* Sticky mobile action bar */}
+        <div className="bg-white border-t border-[#E0E0E0] px-4 py-3 flex items-center gap-2">
           <button
-            onClick={() =>
-              setShowMobilePreview(!showMobilePreview)
-            }
-            className="w-full mt-6 bg-black text-white py-3 px-6 rounded-lg transition-all duration-200 hover:bg-[#333] cursor-pointer"
-            style={{ fontFamily: "Manrope, sans-serif" }}
+            onClick={() => navigate("/")}
+            title="Cancel"
+            className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
           >
-            {showMobilePreview
-              ? "Hide Preview"
-              : "Preview Invoice"}
+            <ArrowLeft className="w-5 h-5" />
           </button>
-
-          {showMobilePreview && (
-            <div className="mt-6">
-              <InvoicePreview
-                ref={invoicePreviewRef}
-                invoiceData={invoiceData}
-                companySettings={companySettings}
-                subtotal={calculateSubtotal()}
-                tax={calculateTax()}
-                total={calculateTotal()}
-                onDownload={handleDownloadPDF}
-                onSave={saveInvoice}
-                isInvoiceSaved={isInvoiceSaved}
-              />
-            </div>
-          )}
+          <button
+            onClick={() => setShowMobilePreview(true)}
+            title="Preview Invoice"
+            className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+          >
+            <Eye className="w-5 h-5" />
+          </button>
+          <button
+            onClick={isInvoiceSaved ? handleDownloadPDF : undefined}
+            disabled={!isInvoiceSaved}
+            title={isInvoiceSaved ? "Download PDF" : "Save first to download"}
+            className={`p-2.5 rounded-lg border transition-colors ${
+              isInvoiceSaved
+                ? 'border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] cursor-pointer'
+                : 'border-gray-200 text-gray-300 cursor-not-allowed'
+            }`}
+          >
+            <Download className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setShowSaveConfirmModal(true)}
+            className="flex-1 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+            style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
+          >
+            Save
+          </button>
         </div>
       </div>
+
+      {/* Mobile Preview Modal */}
+      {showMobilePreview && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/60 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E0E0E0]">
+            <span className="font-bold text-base" style={{ fontFamily: "Manrope, sans-serif" }}>
+              Invoice Preview
+            </span>
+            <button
+              onClick={() => setShowMobilePreview(false)}
+              className="p-2 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto bg-[#F5F5F5] p-4 pb-20">
+            <InvoicePreview
+              ref={invoicePreviewRef}
+              invoiceData={invoiceData}
+              companySettings={companySettings}
+              subtotal={calculateSubtotal()}
+              tax={calculateTax()}
+              total={calculateTotal()}
+              onDownload={handleDownloadPDF}
+              onSave={() => { setShowMobilePreview(false); setShowSaveConfirmModal(true); }}
+              isInvoiceSaved={isInvoiceSaved}
+              onEdit={() => setShowMobilePreview(false)}
+              compact={true}
+              hideButtons={true}
+            />
+          </div>
+          {/* Fixed bottom action bar */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#E0E0E0] px-4 py-3 flex items-center gap-2">
+            <button
+              onClick={() => setShowMobilePreview(false)}
+              className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+              title="Back to form"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="tooltip-wrapper relative">
+              {!isInvoiceSaved && <span className="tooltip-text">Save first</span>}
+              <button
+                onClick={isInvoiceSaved ? handleDownloadPDF : undefined}
+                disabled={!isInvoiceSaved}
+                className={`p-2.5 rounded-lg border transition-colors ${
+                  isInvoiceSaved
+                    ? 'border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] cursor-pointer'
+                    : 'border-gray-200 text-gray-300 cursor-not-allowed'
+                }`}
+                title="Download"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            </div>
+            <button
+              onClick={() => { setShowMobilePreview(false); setShowSaveConfirmModal(true); }}
+              className="flex-1 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+              style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1000,14 +1079,7 @@ function FormEditor({
   
   return (
     <div className="space-y-8">
-      <div className="mb-2 flex items-center gap-3">
-        <button
-          onClick={() => navigate("/")}
-          className="p-2 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] hover:text-[#1A1A1A] transition-colors cursor-pointer"
-          title="Back to Invoices"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+      <div className="mb-2">
         <h1
           className="text-3xl tracking-tight"
           style={{
@@ -1015,7 +1087,7 @@ function FormEditor({
             fontWeight: 700,
           }}
         >
-          {isEditMode ? "Edit Invoice" : "Invoice Generator"}
+          {isEditMode ? "Edit Invoice" : "New Invoice"}
         </h1>
       </div>
 
@@ -1503,17 +1575,7 @@ function FormEditor({
                 Tax %:
               </label>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={applyTax}
-                  className="px-3 py-2 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-all text-sm whitespace-nowrap cursor-pointer"
-                  style={{
-                    fontFamily: "Manrope, sans-serif",
-                    fontWeight: 600,
-                  }}
-                >
-                  Apply Tax
-                </button>
-                {invoiceData.taxPercent > 0 && (
+                {invoiceData.taxPercent > 0 ? (
                   <button
                     onClick={() => updateInvoice({ taxPercent: 0 })}
                     className="px-3 py-2 border border-[#E0E0E0] text-[#6B6B6B] rounded-lg hover:bg-[#F5F5F5] transition-all text-sm whitespace-nowrap cursor-pointer"
@@ -1523,6 +1585,17 @@ function FormEditor({
                     }}
                   >
                     Reset
+                  </button>
+                ) : (
+                  <button
+                    onClick={applyTax}
+                    className="px-3 py-2 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-all text-sm whitespace-nowrap cursor-pointer"
+                    style={{
+                      fontFamily: "Manrope, sans-serif",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Apply Tax
                   </button>
                 )}
                 <div className="relative w-24">
@@ -1613,20 +1686,6 @@ function FormEditor({
         />
       </section>
 
-      {!isMobile && (
-        <button
-          className="w-full bg-black text-white py-3 px-6 rounded-lg transition-all duration-200 hover:bg-[#333] cursor-pointer"
-          style={{
-            fontFamily: "Manrope, sans-serif",
-            fontWeight: 700,
-          }}
-          onClick={() =>
-            window.scrollTo({ top: 0, behavior: "smooth" })
-          }
-        >
-          Preview Invoice
-        </button>
-      )}
     </div>
   );
 }
@@ -1640,6 +1699,11 @@ interface InvoicePreviewProps {
   onDownload: () => void;
   onSave: () => void;
   isInvoiceSaved: boolean;
+  hideEditButton?: boolean;
+  onEdit?: () => void;
+  onCancel?: () => void;
+  compact?: boolean;
+  hideButtons?: boolean;
 }
 
 const InvoicePreview = React.forwardRef<
@@ -1656,19 +1720,43 @@ const InvoicePreview = React.forwardRef<
       onDownload,
       onSave,
       isInvoiceSaved,
+      hideEditButton,
+      onEdit,
+      onCancel,
+      compact,
+      hideButtons,
     },
     ref,
   ) => {
+    const scaleWrapperRef = useRef<HTMLDivElement>(null);
+    const [scale, setScale] = useState(1);
+    const LETTER_W = 816;
+    const LETTER_H = 1056;
+
+    useEffect(() => {
+      if (!scaleWrapperRef.current) return;
+      const ro = new ResizeObserver(([entry]) => {
+        setScale(Math.min(1, entry.contentRect.width / LETTER_W));
+      });
+      ro.observe(scaleWrapperRef.current);
+      return () => ro.disconnect();
+    }, []);
+
     return (
-      <div className="space-y-6">
-        {/* Invoice Card */}
+      <div className="space-y-4">
+        {/* Scaled Invoice Card */}
+        <div ref={scaleWrapperRef} className="w-full flex justify-center" style={{ height: Math.ceil(LETTER_H * scale) }}>
+          <div style={{ width: LETTER_W, transformOrigin: 'top center', transform: `scale(${scale})`, flexShrink: 0 }}>
         <div
           ref={ref}
-          className="invoice-pdf-container bg-white rounded-2xl p-8 md:p-12 shadow-lg"
+          className="invoice-pdf-container bg-white shadow-lg flex flex-col"
           style={{
             fontFamily: "Inter, sans-serif",
             color: "#000000",
             backgroundColor: "#FFFFFF",
+            width: LETTER_W,
+            minHeight: LETTER_H,
+            padding: '48px',
           }}
         >
           <style>{`
@@ -1707,7 +1795,7 @@ const InvoicePreview = React.forwardRef<
           `}</style>
 
           {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-6">
+          <div className="flex flex-row justify-between items-start gap-6 mb-6">
             <div className="flex items-center gap-3">
               {companySettings.logoUrl && (
                 <div style={{ width: "40px", height: "40px" }}>
@@ -1768,9 +1856,9 @@ const InvoicePreview = React.forwardRef<
           <div className="h-px bg-black mb-6"></div>
 
           {/* Invoice Title and Meta */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-8">
+          <div className="flex flex-row justify-between items-start gap-4 mb-8">
             <h1
-              className="text-3xl md:text-4xl tracking-tight"
+              className="text-4xl tracking-tight"
               style={{
                 fontFamily: "Manrope, sans-serif",
                 fontWeight: 700,
@@ -1808,7 +1896,7 @@ const InvoicePreview = React.forwardRef<
           </div>
 
           {/* From / Bill To */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-2 gap-6 mb-8">
             <div>
               <div
                 className="uppercase text-xs tracking-wider mb-2"
@@ -1948,7 +2036,7 @@ const InvoicePreview = React.forwardRef<
 
           {/* Summary */}
           <div className="flex justify-end mb-8">
-            <div className="w-full md:w-64 space-y-2 text-sm">
+            <div className="w-64 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-[#6B6B6B]">Subtotal</span>
                 <span>${subtotal.toFixed(2)}</span>
@@ -1995,15 +2083,17 @@ const InvoicePreview = React.forwardRef<
 
           {/* Footer */}
           <div
-            className="text-center text-sm text-[#6B6B6B] pt-6 border-t border-[#E0E0E0]"
+            className="mt-auto text-center text-sm text-[#6B6B6B] pt-6 border-t border-[#E0E0E0]"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             Thank you for your business.
           </div>
-        </div>
+        </div>{/* closes invoice-pdf-container */}
+          </div>{/* closes scale transform div */}
+        </div>{/* closes scaleWrapperRef div */}
 
         {/* Action Buttons */}
-        <div className="sticky bottom-0 bg-[#F5F5F5] pt-6 -mx-8 px-8 pb-8">
+        {!hideButtons && <div className="sticky bottom-0 bg-[#F5F5F5] pt-4 -mx-8 px-8 pb-6">
           <style>{`
             .tooltip-wrapper {
               position: relative;
@@ -2042,53 +2132,84 @@ const InvoicePreview = React.forwardRef<
               border-color: #1F2937 transparent transparent transparent;
             }
           `}</style>
-          <div className="grid grid-cols-3 gap-3">
-            <button
-              onClick={() =>
-                window.scrollTo({ top: 0, behavior: "smooth" })
-              }
-              className="px-6 py-3 bg-white border border-black rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
-              style={{
-                fontFamily: "Manrope, sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              Edit
-            </button>
-            <button
-              onClick={onSave}
-              className="px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer"
-              style={{
-                fontFamily: "Manrope, sans-serif",
-                fontWeight: 600,
-              }}
-            >
-              Save
-            </button>
-            <div className="tooltip-wrapper">
-              {!isInvoiceSaved && (
-                <span className="tooltip-text">
-                  Please save the invoice first
-                </span>
+          {compact ? (
+            /* Compact (mobile modal): icon buttons for Edit/Download, text Save on right */
+            <div className="flex items-center gap-2">
+              {!hideEditButton && (
+                <button
+                  onClick={onEdit ?? (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
+                  className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                  title="Edit"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
               )}
+              <div className="tooltip-wrapper">
+                {!isInvoiceSaved && (
+                  <span className="tooltip-text">Please save first</span>
+                )}
+                <button
+                  onClick={isInvoiceSaved ? onDownload : undefined}
+                  disabled={!isInvoiceSaved}
+                  className={`p-2.5 rounded-lg border transition-colors ${
+                    isInvoiceSaved
+                      ? 'border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] cursor-pointer'
+                      : 'border-gray-200 text-gray-300 cursor-not-allowed'
+                  }`}
+                  title="Download"
+                >
+                  <Download className="w-5 h-5" />
+                </button>
+              </div>
               <button
-                onClick={isInvoiceSaved ? onDownload : undefined}
-                disabled={!isInvoiceSaved}
-                className={`w-full px-6 py-3 text-white rounded-lg transition-all duration-200 ${
-                  isInvoiceSaved 
-                    ? 'bg-[#4A5D23] hover:bg-[#3A4A1B] cursor-pointer'
-                    : 'bg-gray-300 cursor-not-allowed opacity-60'
-                }`}
-                style={{
-                  fontFamily: "Manrope, sans-serif",
-                  fontWeight: 600,
-                }}
+                onClick={onSave}
+                className="flex-1 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
               >
-                Download
+                Save
               </button>
             </div>
-          </div>
-        </div>
+          ) : (
+            /* Desktop: 2-col grid, Save primary + Download secondary */
+            /* Desktop: Download left, Cancel + Save right */
+            <div className="flex items-center gap-3">
+              <div className="tooltip-wrapper">
+                {!isInvoiceSaved && (
+                  <span className="tooltip-text">Please save the invoice first</span>
+                )}
+                <button
+                  onClick={isInvoiceSaved ? onDownload : undefined}
+                  disabled={!isInvoiceSaved}
+                  className={`px-6 py-3 rounded-lg transition-all duration-200 border ${
+                    isInvoiceSaved
+                      ? 'border-[#4A5D23] text-[#4A5D23] hover:bg-[#F5F7EE] cursor-pointer'
+                      : 'border-gray-300 text-gray-400 cursor-not-allowed opacity-60'
+                  }`}
+                  style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
+                >
+                  Download
+                </button>
+              </div>
+              <div className="flex-1" />
+              {onCancel && (
+                <button
+                  onClick={onCancel}
+                  className="px-6 py-3 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
+                  style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                onClick={onSave}
+                className="px-12 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer"
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
+              >
+                Save
+              </button>
+            </div>
+          )}
+        </div>}
       </div>
     );
   },

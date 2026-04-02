@@ -84,6 +84,7 @@ export default function InvoiceManagement() {
   const [selectedClient, setSelectedClient] = useState<string>("all");
   const [showClientFilter, setShowClientFilter] = useState(false);
   const [timeWindow, setTimeWindow] = useState<TimeWindow>("all");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     companyName: "UnitPulse",
     companyAddress: "800 S Harvard Blvd\nLos Angeles, CA 90005\nUnited States",
@@ -172,7 +173,7 @@ export default function InvoiceManagement() {
   };
 
   const deleteInvoice = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this invoice?")) return;
+    setDeleteConfirmId(null);
     try {
       const response = await fetchAPI(`/invoices/${id}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Failed to delete invoice");
@@ -524,7 +525,7 @@ export default function InvoiceManagement() {
                         <div className="flex items-center justify-end gap-1">
                           <button onClick={() => editInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
                           <button onClick={() => downloadInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Download"><Download className="w-4 h-4" /></button>
-                          <button onClick={() => deleteInvoice(invoice.id)} className="p-2 text-[#6B6B6B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(invoice.id); }} className="p-2 text-[#6B6B6B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -535,6 +536,42 @@ export default function InvoiceManagement() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirm Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <h2
+              className="text-xl mb-2"
+              style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
+            >
+              Delete Invoice
+            </h2>
+            <p
+              className="text-[#6B6B6B] text-sm mb-6"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              Are you sure you want to delete this invoice? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteInvoice(deleteConfirmId)}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
