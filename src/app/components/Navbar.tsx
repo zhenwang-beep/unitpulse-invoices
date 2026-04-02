@@ -60,8 +60,16 @@ export function Navbar() {
           })}
         </div>
 
-        {/* Right: Profile + Hamburger (mobile) */}
-        <div className="flex items-center gap-1">
+        {/* Right: New Invoice + Profile + Hamburger (mobile) */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/new')}
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer text-sm"
+            style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 600 }}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">New Invoice</span>
+          </button>
           <UserProfileMenu />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -72,19 +80,6 @@ export function Navbar() {
           </button>
         </div>
       </nav>
-
-      {/* Floating New Invoice Button — hidden on /new page */}
-      {location.pathname !== '/new' && (
-        <button
-          onClick={() => navigate('/new')}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-5 py-3.5 bg-[#4A5D23] text-white rounded-full shadow-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
-          style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 700 }}
-          aria-label="New Invoice"
-        >
-          <Plus className="w-5 h-5" />
-          <span className="hidden sm:inline text-sm">New Invoice</span>
-        </button>
-      )}
 
       {/* Mobile Dropdown Menu */}
       {mobileOpen && (
