@@ -505,7 +505,11 @@ export default function InvoiceManagement() {
                 </thead>
                 <tbody>
                   {filteredInvoices.map((invoice, index) => (
-                    <tr key={invoice.id} className={index % 2 === 0 ? "bg-white" : "bg-[#FAFAFA]"}>
+                    <tr
+                      key={invoice.id}
+                      onClick={() => editInvoice(invoice)}
+                      className={`cursor-pointer hover:bg-[#F5F7EE] transition-colors ${index % 2 === 0 ? "bg-white" : "bg-[#FAFAFA]"}`}
+                    >
                       <td className="px-6 py-4 font-medium text-sm" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.invoiceId}</td>
                       <td className="px-6 py-4 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.clientName || "—"}</td>
                       <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.issueDate || "—"}</td>
@@ -517,7 +521,7 @@ export default function InvoiceManagement() {
                       <td className="px-6 py-4 text-right font-semibold text-sm text-[#4A5D23]" style={{ fontFamily: "Inter, sans-serif" }}>
                         ${invoice.total?.toFixed(2) || "0.00"}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <button onClick={() => editInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
                           <button onClick={() => downloadInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Download"><Download className="w-4 h-4" /></button>

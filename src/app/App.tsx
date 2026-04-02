@@ -231,6 +231,7 @@ function getDueDateFromIssueDate(issueDate: string) {
 
 export function InvoiceGeneratorPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [showMobilePreview, setShowMobilePreview] =
     useState(false);
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
@@ -277,7 +278,7 @@ export function InvoiceGeneratorPage() {
   }>>([]);
   
   const [isInvoiceSaved, setIsInvoiceSaved] = useState(false);
-  const [showPostSaveDialog, setShowPostSaveDialog] = useState(false);
+  const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
 
   const [isEditMode, setIsEditMode] = useState(false);
   
@@ -437,19 +438,16 @@ export function InvoiceGeneratorPage() {
   };
   
   // Function to save invoice to database
-  const saveInvoice = async () => {
+  const saveInvoice = async (downloadAfter = false) => {
+    setShowSaveConfirmModal(false);
     try {
-      // Check if this is an update (invoice loaded from management page)
       const isUpdate = location.state?.invoice?.id;
       const invoiceId = isUpdate ? location.state.invoice.id : `invoice_${invoiceData.invoiceId}`;
-      
       const endpoint = isUpdate ? `/invoices/${invoiceId}` : "/invoices";
-      
+
       const response = await fetchAPI(endpoint, {
         method: isUpdate ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           invoiceData,
           subtotal: calculateSubtotal(),
@@ -459,14 +457,11 @@ export function InvoiceGeneratorPage() {
       });
 
       if (response.ok) {
-        // After saving invoice, save all line items that have valid descriptions and prices
         for (const item of invoiceData.lineItems) {
           if (item.description.trim() && item.unitPrice > 0) {
             await saveItem(item.description, item.unitPrice);
           }
         }
-        
-        // Save client if not already saved
         await saveClient({
           clientName: invoiceData.clientName,
           clientAddress: invoiceData.clientAddress,
@@ -475,10 +470,13 @@ export function InvoiceGeneratorPage() {
           clientZip: invoiceData.clientZip,
           clientCountry: invoiceData.clientCountry,
         });
-        
-        toast.success(isUpdate ? "Invoice updated successfully!" : "Invoice saved successfully!");
+
         setIsInvoiceSaved(true);
-        if (!isUpdate) setShowPostSaveDialog(true);
+        if (downloadAfter) handleDownloadPDF();
+        toast.success(isUpdate ? "Invoice updated!" : "Invoice saved!", {
+          action: { label: "View Invoice", onClick: () => navigate("/") },
+        });
+        if (!isUpdate) resetInvoice();
       } else {
         toast.error("Failed to save invoice");
       }
@@ -505,7 +503,7 @@ export function InvoiceGeneratorPage() {
       notes: "",
     });
     setIsInvoiceSaved(false);
-    setShowPostSaveDialog(false);
+    setShowSaveConfirmModal(false);
   };
 
   const updateInvoice = (updates: Partial<InvoiceData>) => {
@@ -750,37 +748,37 @@ export function InvoiceGeneratorPage() {
       <Toaster position="top-center" />
       <Navbar />
 
-      {/* Post-Save Dialog */}
-      {showPostSaveDialog && (
+      {/* Save Confirm Modal */}
+      {showSaveConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
             <h2 className="text-xl mb-1" style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}>
-              Invoice Saved!
+              Ready to save?
             </h2>
             <p className="text-sm text-[#6B6B6B] mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
-              What would you like to do next?
+              Please confirm you've reviewed the invoice details before saving.
             </p>
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => { setShowPostSaveDialog(false); handleDownloadPDF(); }}
+                onClick={() => saveInvoice(false)}
                 className="w-full px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
               >
-                Download PDF
+                Save
               </button>
               <button
-                onClick={resetInvoice}
-                className="w-full px-6 py-3 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                onClick={() => saveInvoice(true)}
+                className="w-full px-6 py-3 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-colors cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
               >
-                Create New Invoice
+                Save & Download PDF
               </button>
               <button
-                onClick={() => setShowPostSaveDialog(false)}
+                onClick={() => setShowSaveConfirmModal(false)}
                 className="text-sm text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors cursor-pointer py-1"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
-                Stay on this invoice
+                Cancel
               </button>
             </div>
           </div>
@@ -837,7 +835,7 @@ export function InvoiceGeneratorPage() {
               tax={calculateTax()}
               total={calculateTotal()}
               onDownload={handleDownloadPDF}
-              onSave={saveInvoice}
+              onSave={() => setShowSaveConfirmModal(true)}
               isInvoiceSaved={isInvoiceSaved}
             />
           </div>
