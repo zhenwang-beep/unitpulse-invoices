@@ -244,7 +244,6 @@ export default function InvoiceManagement() {
 
       const pdf = generateInvoicePDF(invoice, invoice.subtotal, invoice.tax, invoice.total, logoDataUrl, logoWidth, logoHeight, companySettings);
       pdf.save(`${invoice.invoiceId}.pdf`);
-      toast.success("Invoice downloaded successfully!");
     } catch (error) {
       console.error("Error downloading invoice:", error);
       toast.error("Failed to download invoice");
@@ -261,24 +260,13 @@ export default function InvoiceManagement() {
       <div className="max-w-7xl mx-auto px-4 py-8">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "Manrope, sans-serif" }}>
-              Invoices
-            </h1>
-            <p className="text-[#6B6B6B] mt-1 text-sm sm:text-base" style={{ fontFamily: "Inter, sans-serif" }}>
-              Overview of your invoicing activity
-            </p>
-          </div>
-          <button
-            onClick={() => navigate("/new")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
-            style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Invoice</span>
-            <span className="sm:hidden text-sm">New</span>
-          </button>
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "Manrope, sans-serif" }}>
+            Invoices
+          </h1>
+          <p className="text-[#6B6B6B] mt-1 text-sm sm:text-base" style={{ fontFamily: "Inter, sans-serif" }}>
+            Overview of your invoicing activity
+          </p>
         </div>
 
         {/* Time Window Filter */}

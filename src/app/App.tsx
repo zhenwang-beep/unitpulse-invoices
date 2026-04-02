@@ -736,7 +736,6 @@ export function InvoiceGeneratorPage() {
         companySettings,
       );
       pdf.save(`${invoiceData.invoiceId}.pdf`);
-      toast.success("Invoice downloaded successfully!");
     } catch (error) {
       console.error("Error generating PDF:", error);
       toast.error("Failed to generate PDF");
