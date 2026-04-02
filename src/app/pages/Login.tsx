@@ -186,27 +186,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Info Box */}
-        <div
-          className="mt-6 p-4 bg-[#F5F7EE] border border-[#4A5D23] rounded-lg"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
-          <p className="text-sm text-[#166534]">
-            <strong className="font-semibold">
-              Setup Required:
-            </strong>{" "}
-            Please ensure Google OAuth is configured in your
-            Supabase dashboard. Follow the instructions at{" "}
-            <a
-              href="https://supabase.com/docs/guides/auth/social-login/auth-google"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-[#4A5D23]"
-            >
-              supabase.com/docs/guides/auth/social-login/auth-google
-            </a>
-          </p>
-        </div>
       </div>
     </div>
   );
