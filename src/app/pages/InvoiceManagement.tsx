@@ -243,7 +243,7 @@ export default function InvoiceManagement() {
         logoDataUrl = result.dataUrl; logoWidth = result.width; logoHeight = result.height;
       }
 
-      const pdf = generateInvoicePDF(invoice, invoice.subtotal, invoice.tax, invoice.total, logoDataUrl, logoWidth, logoHeight, companySettings);
+      const pdf = await generateInvoicePDF(invoice, invoice.subtotal, invoice.tax, invoice.total, logoDataUrl, logoWidth, logoHeight, companySettings);
       pdf.save(`${invoice.invoiceId}.pdf`);
     } catch (error) {
       console.error("Error downloading invoice:", error);

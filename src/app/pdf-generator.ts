@@ -29,7 +29,10 @@ interface CompanySettings {
   companyPhone?: string;
 }
 
-export function generateInvoicePDF(
+/** Same embedded faces as the quote export, so the two documents match. */
+const SANS = "Manrope";
+
+export async function generateInvoicePDF(
   invoiceData: InvoiceData,
   subtotal: number,
   tax: number,
@@ -45,6 +48,14 @@ export function generateInvoicePDF(
     format: "letter",
   });
 
+  // Loaded on demand; see pdf-fonts.ts. Without this the invoice renders in
+  // Helvetica while the on-screen preview uses Manrope.
+  const { MANROPE_REGULAR, MANROPE_BOLD } = await import("./pdf-fonts");
+  pdf.addFileToVFS("Manrope-Regular.ttf", MANROPE_REGULAR);
+  pdf.addFont("Manrope-Regular.ttf", SANS, "normal");
+  pdf.addFileToVFS("Manrope-Bold.ttf", MANROPE_BOLD);
+  pdf.addFont("Manrope-Bold.ttf", SANS, "bold");
+
   const pageWidth = 612;
   const pageHeight = 792;
   const margin = 48;
@@ -58,8 +69,8 @@ export function generateInvoicePDF(
     options?: any,
   ) => {
     pdf.setFont(
-      options?.font || "helvetica",
-      options?.style || "normal",
+      options?.font || SANS,
+      options?.style === "italic" ? "normal" : options?.style || "normal",
     );
     pdf.setFontSize(options?.size || 10);
     pdf.setTextColor(options?.color || "#000000");
@@ -196,11 +207,11 @@ export function generateInvoicePDF(
   const idValue = invoiceData.invoiceId;
 
   // Measure text widths
-  pdf.setFont("helvetica", "normal");
+  pdf.setFont(SANS, "normal");
   pdf.setFontSize(9);
   const labelWidth = pdf.getTextWidth(idLabel);
 
-  pdf.setFont("helvetica", "bold");
+  pdf.setFont(SANS, "bold");
   pdf.setFontSize(9);
   const valueWidth = pdf.getTextWidth(idValue);
 
@@ -209,13 +220,13 @@ export function generateInvoicePDF(
   const startX = pageWidth - margin - totalLineWidth;
 
   // Draw label in gray
-  pdf.setFont("helvetica", "normal");
+  pdf.setFont(SANS, "normal");
   pdf.setFontSize(9);
   pdf.setTextColor("#71717B");
   pdf.text(idLabel, startX, metaY);
 
   // Draw value in bold black right after the label
-  pdf.setFont("helvetica", "bold");
+  pdf.setFont(SANS, "bold");
   pdf.setFontSize(9);
   pdf.setTextColor("#000000");
   pdf.text(idValue, startX + labelWidth, metaY);
@@ -492,7 +503,7 @@ export function generateInvoicePDF(
       invoiceData.notes,
       pageWidth - 2 * margin,
     );
-    pdf.setFont("helvetica", "italic");
+    pdf.setFont(SANS, "normal");
     pdf.setFontSize(9);
     pdf.setTextColor("#71717B");
     pdf.text(notesLines, margin, yPos);

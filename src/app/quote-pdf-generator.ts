@@ -53,7 +53,12 @@ interface TextOptions {
   font?: string;
 }
 
-export function generateQuotePDF(
+/** The embedded faces. `SANS` replaces Helvetica everywhere; `SERIF` is the
+ *  display voice, matching QuotePreview's Newsreader headings. */
+const SANS = "Manrope";
+const SERIF = "Newsreader";
+
+export async function generateQuotePDF(
   quote: Quote,
   companySettings?: CompanySettings,
   logoImage?: string,
@@ -65,6 +70,20 @@ export function generateQuotePDF(
     unit: "pt",
     format: "letter",
   });
+
+  // Loaded on demand — the base64 payloads are ~400KB and only a PDF export
+  // needs them. Without these the document falls back to Helvetica, which is
+  // not just a different typeface: its metrics differ, so every getTextWidth
+  // measurement shifts columns and wraps away from what the preview shows.
+  const { MANROPE_REGULAR, MANROPE_BOLD, NEWSREADER_MEDIUM } = await import(
+    "./pdf-fonts"
+  );
+  pdf.addFileToVFS("Manrope-Regular.ttf", MANROPE_REGULAR);
+  pdf.addFont("Manrope-Regular.ttf", SANS, "normal");
+  pdf.addFileToVFS("Manrope-Bold.ttf", MANROPE_BOLD);
+  pdf.addFont("Manrope-Bold.ttf", SANS, "bold");
+  pdf.addFileToVFS("Newsreader-Medium.ttf", NEWSREADER_MEDIUM);
+  pdf.addFont("Newsreader-Medium.ttf", SERIF, "normal");
 
   const pageWidth = 612;
   const pageHeight = 792;
@@ -86,7 +105,9 @@ export function generateQuotePDF(
     y: number,
     options?: TextOptions,
   ) => {
-    pdf.setFont(options?.font || "helvetica", options?.style || "normal");
+    const family = options?.font || SANS;
+    const weight = options?.style === "italic" ? "normal" : options?.style || "normal";
+    pdf.setFont(family, weight);
     pdf.setFontSize(options?.size || 10);
     pdf.setTextColor(options?.color || TEXT_PRIMARY);
     if (options?.charSpace) pdf.setCharSpace(options.charSpace);
@@ -146,7 +167,7 @@ export function generateQuotePDF(
     size: number,
     style: "normal" | "bold" | "italic" = "normal",
   ): string[] => {
-    pdf.setFont("helvetica", style);
+    pdf.setFont(SANS, style === "italic" ? "normal" : style);
     pdf.setFontSize(size);
     return String(text ?? "")
       .split("\n")
@@ -164,7 +185,7 @@ export function generateQuotePDF(
     size = 7.5,
     charSpace = 1.1,
   ): string[] => {
-    pdf.setFont("helvetica", "bold");
+    pdf.setFont(SANS, "bold");
     pdf.setFontSize(size);
     const fits = (s: string) => pdf.getTextWidth(s) + charSpace * s.length <= width;
     const words = String(text ?? "")
@@ -209,7 +230,7 @@ export function generateQuotePDF(
 
   // --- Bullets ("— " with a hanging indent) -------------------------------
   const bulletLines = (text: string, width: number, size: number) => {
-    pdf.setFont("helvetica", "normal");
+    pdf.setFont(SANS, "normal");
     pdf.setFontSize(size);
     const dashW = pdf.getTextWidth("—  ");
     return {
@@ -261,7 +282,7 @@ export function generateQuotePDF(
     );
     eyebrow(`SECTION ${num}`, margin, yPos);
     yPos += 18;
-    addText(title, margin, yPos, { size: 17, color: TEXT_PRIMARY });
+    addText(title, margin, yPos, { size: 17, color: TEXT_PRIMARY, font: SERIF });
     yPos += 12;
     drawLine(margin, yPos, contentRight, yPos, BORDER_DEFAULT, 0.8);
     yPos += 22;
@@ -385,8 +406,8 @@ export function generateQuotePDF(
     drawLine(innerX, by, innerX + innerW, by, WHITE, 0.5);
 
     by += 22;
-    const kpis: Array<[string, string, number]> = [
-      ["Monthly investment", formatMoney(totalMonthly, currency), 15],
+    const kpis: Array<[string, string, number, string?]> = [
+      ["Monthly investment", formatMoney(totalMonthly, currency), 15, SERIF],
       [
         "Initial term",
         orDash(
@@ -398,10 +419,16 @@ export function generateQuotePDF(
       ],
       ["Service start", formatQuoteDate(quote.serviceStartDate), 11],
     ];
-    kpis.forEach(([label, value, size], i) => {
+    kpis.forEach(([label, value, size, font], i) => {
       const x = innerX + (innerW / 3) * i;
       eyebrow(label, x, by, { color: WHITE });
-      addText(value, x, by + 16, { size, style: "bold", color: WHITE });
+      // Newsreader has only the Medium face here, so it draws as "normal".
+      addText(value, x, by + 16, {
+        size,
+        style: font ? "normal" : "bold",
+        color: WHITE,
+        font,
+      });
     });
 
     yPos = bandY + bandH + 28;
@@ -598,10 +625,10 @@ export function generateQuotePDF(
       color: WHITE,
     });
     addText(formatMoney(totalMonthly, currency), colAmountX, yPos + 25, {
-      size: 15,
-      style: "bold",
+      size: 16,
       color: WHITE,
       align: "right",
+      font: SERIF,
     });
     yPos += totalH;
 
@@ -962,11 +989,26 @@ export function generateQuotePDF(
   // =======================================================================
   // FOOTER — drawn last, once the total page count is known
   // =======================================================================
+  // "UnitPulse · unitpulse.ai · Quote UP-2026-0148 · Confidential — prepared
+  // for the named recipient only". The domain is derived from the company
+  // email so it follows Settings rather than being hardcoded.
+  const domain = companySettings?.companyEmail?.includes("@")
+    ? companySettings.companyEmail.split("@")[1]
+    : "";
+  const footerLine = [
+    companyName,
+    domain,
+    `Quote ${orDash(quote.quoteNumber)}`,
+    "Confidential — prepared for the named recipient only",
+  ]
+    .filter(Boolean)
+    .join("  ·  ");
+
   const totalPages = pdf.getNumberOfPages();
   for (let page = 1; page <= totalPages; page += 1) {
     pdf.setPage(page);
     drawLine(margin, footerRuleY, contentRight, footerRuleY, BORDER_HAIRLINE);
-    addText(orDash(quote.quoteNumber), margin, footerRuleY + 16, {
+    addText(footerLine, margin, footerRuleY + 16, {
       size: 8,
       color: TEXT_MUTED,
     });

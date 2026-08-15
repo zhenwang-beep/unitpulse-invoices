@@ -559,7 +559,7 @@ export default function QuoteGenerator() {
   const downloadPDF = async () => {
     try {
       const { dataUrl, width, height } = await resolveLogoBitmap(companySettings);
-      const pdf = generateQuotePDF(
+      const pdf = await generateQuotePDF(
         quote,
         companySettings,
         dataUrl,

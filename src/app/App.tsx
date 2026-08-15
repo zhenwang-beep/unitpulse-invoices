@@ -729,7 +729,7 @@ export function InvoiceGeneratorPage() {
         logoHeight = result.height;
       }
 
-      const pdf = generateInvoicePDF(
+      const pdf = await generateInvoicePDF(
         invoiceData,
         calculateSubtotal(),
         calculateTax(),

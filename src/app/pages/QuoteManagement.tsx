@@ -239,7 +239,7 @@ export default function QuoteManagement() {
         logoDataUrl = result.dataUrl; logoWidth = result.width; logoHeight = result.height;
       }
 
-      const pdf = generateQuotePDF(quote, companySettings, logoDataUrl, logoWidth, logoHeight);
+      const pdf = await generateQuotePDF(quote, companySettings, logoDataUrl, logoWidth, logoHeight);
       pdf.save(`${quote.quoteNumber || "quote"}.pdf`);
     } catch (error) {
       console.error("Error downloading quote:", error);
