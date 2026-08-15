@@ -6,3 +6,6 @@ dist
 .env
 .env.*
 !.env.example
+
+# Supabase CLI local link state (contains project ref / pooler details)
+supabase/.temp/
