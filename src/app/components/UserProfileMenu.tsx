@@ -48,7 +48,7 @@ export function UserProfileMenu() {
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-[#6366F1] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[#006045] flex items-center justify-center">
             <span
               className="text-white text-sm font-semibold"
               style={{ fontFamily: 'Manrope, sans-serif' }}
@@ -61,18 +61,18 @@ export function UserProfileMenu() {
 
       {/* Dropdown Menu */}
       {showMenu && (
-        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-[#E0E0E0] overflow-hidden z-50">
+        <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-[#E4E4E7] overflow-hidden z-50">
           {/* User Info */}
-          <div className="px-4 py-3 border-b border-[#E0E0E0]">
+          <div className="px-4 py-3 border-b border-[#E4E4E7]">
             <p
-              className="text-sm font-medium text-[#1F1F1F]"
-              style={{ fontFamily: 'Inter, sans-serif' }}
+              className="text-sm font-medium text-[#18181B]"
+              style={{ fontFamily: 'Manrope, sans-serif' }}
             >
               {userName}
             </p>
             <p
-              className="text-xs text-[#666666]"
-              style={{ fontFamily: 'Inter, sans-serif' }}
+              className="text-xs text-[#52525C]"
+              style={{ fontFamily: 'Manrope, sans-serif' }}
             >
               {userEmail}
             </p>
@@ -86,7 +86,7 @@ export function UserProfileMenu() {
             <LogOut className="w-4 h-4" />
             <span
               className="text-sm font-medium"
-              style={{ fontFamily: 'Inter, sans-serif' }}
+              style={{ fontFamily: 'Manrope, sans-serif' }}
             >
               Sign out
             </span>

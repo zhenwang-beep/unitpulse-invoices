@@ -746,7 +746,7 @@ export function InvoiceGeneratorPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#FCF9F8]">
+    <div className="flex flex-col h-screen bg-[#FAFAFA]">
       <Toaster position="top-center" />
       <Navbar />
 
@@ -757,28 +757,28 @@ export function InvoiceGeneratorPage() {
             <h2 className="text-xl mb-1" style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}>
               Ready to save?
             </h2>
-            <p className="text-sm text-[#6B6B6B] mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-sm text-[#71717B] mb-6" style={{ fontFamily: "Manrope, sans-serif" }}>
               Please confirm you've reviewed the invoice details before saving.
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => saveInvoice(false)}
-                className="w-full px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+                className="w-full px-6 py-3 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
               >
                 Save
               </button>
               <button
                 onClick={() => saveInvoice(true)}
-                className="w-full px-6 py-3 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-colors cursor-pointer"
+                className="w-full px-6 py-3 border border-[#006045] text-[#006045] rounded-lg hover:bg-[#E8F4F0] transition-colors cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
               >
                 Save & Download PDF
               </button>
               <button
                 onClick={() => setShowSaveConfirmModal(false)}
-                className="text-sm text-[#6B6B6B] hover:text-[#1A1A1A] transition-colors cursor-pointer py-1"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="text-sm text-[#71717B] hover:text-[#18181B] transition-colors cursor-pointer py-1"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Cancel
               </button>
@@ -798,7 +798,7 @@ export function InvoiceGeneratorPage() {
       {/* Desktop Two-Column Layout */}
       <div className="hidden lg:grid lg:grid-cols-[45%_55%] flex-1 overflow-hidden">
         {/* Left Panel - Form Editor (Scrollable) */}
-        <div className="border-r border-[#E0E0E0] overflow-y-auto">
+        <div className="border-r border-[#E4E4E7] overflow-y-auto">
           <div className="p-8">
             <FormEditor
               invoiceData={invoiceData}
@@ -827,7 +827,7 @@ export function InvoiceGeneratorPage() {
         </div>
 
         {/* Right Panel - Invoice Preview (Fixed, Scrollable independently) */}
-        <div className="bg-[#F5F5F5] overflow-y-auto">
+        <div className="bg-[#F4F4F5] overflow-y-auto">
           <div className="p-8">
             <InvoicePreview
               ref={invoicePreviewRef}
@@ -877,18 +877,18 @@ export function InvoiceGeneratorPage() {
           </div>
         </div>
         {/* Sticky mobile action bar */}
-        <div className="bg-white border-t border-[#E0E0E0] px-4 py-3 flex items-center gap-2">
+        <div className="bg-white border-t border-[#E4E4E7] px-4 py-3 flex items-center gap-2">
           <button
             onClick={() => navigate("/")}
             title="Cancel"
-            className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+            className="p-2.5 rounded-lg border border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA] transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <button
             onClick={() => setShowMobilePreview(true)}
             title="Preview Invoice"
-            className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+            className="p-2.5 rounded-lg border border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA] transition-colors cursor-pointer"
           >
             <Eye className="w-5 h-5" />
           </button>
@@ -898,7 +898,7 @@ export function InvoiceGeneratorPage() {
             title={isInvoiceSaved ? "Download PDF" : "Save first to download"}
             className={`p-2.5 rounded-lg border transition-colors ${
               isInvoiceSaved
-                ? 'border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] cursor-pointer'
+                ? 'border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA] cursor-pointer'
                 : 'border-gray-200 text-gray-300 cursor-not-allowed'
             }`}
           >
@@ -906,7 +906,7 @@ export function InvoiceGeneratorPage() {
           </button>
           <button
             onClick={() => setShowSaveConfirmModal(true)}
-            className="flex-1 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+            className="flex-1 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
             style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
           >
             Save
@@ -917,18 +917,18 @@ export function InvoiceGeneratorPage() {
       {/* Mobile Preview Modal */}
       {showMobilePreview && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black/60 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E0E0E0]">
+          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E4E4E7]">
             <span className="font-bold text-base" style={{ fontFamily: "Manrope, sans-serif" }}>
               Invoice Preview
             </span>
             <button
               onClick={() => setShowMobilePreview(false)}
-              className="p-2 rounded-lg text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+              className="p-2 rounded-lg text-[#71717B] hover:bg-[#FAFAFA] transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto bg-[#F5F5F5] p-4 pb-20">
+          <div className="flex-1 overflow-y-auto bg-[#F4F4F5] p-4 pb-20">
             <InvoicePreview
               ref={invoicePreviewRef}
               invoiceData={invoiceData}
@@ -945,10 +945,10 @@ export function InvoiceGeneratorPage() {
             />
           </div>
           {/* Fixed bottom action bar */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#E0E0E0] px-4 py-3 flex items-center gap-2">
+          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#E4E4E7] px-4 py-3 flex items-center gap-2">
             <button
               onClick={() => setShowMobilePreview(false)}
-              className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+              className="p-2.5 rounded-lg border border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA] transition-colors cursor-pointer"
               title="Back to form"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -960,7 +960,7 @@ export function InvoiceGeneratorPage() {
                 disabled={!isInvoiceSaved}
                 className={`p-2.5 rounded-lg border transition-colors ${
                   isInvoiceSaved
-                    ? 'border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] cursor-pointer'
+                    ? 'border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA] cursor-pointer'
                     : 'border-gray-200 text-gray-300 cursor-not-allowed'
                 }`}
                 title="Download"
@@ -970,7 +970,7 @@ export function InvoiceGeneratorPage() {
             </div>
             <button
               onClick={() => { setShowMobilePreview(false); setShowSaveConfirmModal(true); }}
-              className="flex-1 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+              className="flex-1 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
             >
               Save
@@ -1081,10 +1081,10 @@ function FormEditor({
     <div className="space-y-8">
       <div className="mb-2">
         <h1
-          className="text-3xl tracking-tight"
+          className="text-3xl"
           style={{
-            fontFamily: "Manrope, sans-serif",
-            fontWeight: 700,
+            fontFamily: "Newsreader, Georgia, serif",
+            fontWeight: 500,
           }}
         >
           {isEditMode ? "Edit Invoice" : "New Invoice"}
@@ -1106,7 +1106,7 @@ function FormEditor({
         <div className="space-y-3">
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-1.5"
+              className="block text-[#71717B] text-sm mb-1.5"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Invoice ID
@@ -1116,8 +1116,8 @@ function FormEditor({
                 type="text"
                 value={invoiceData.invoiceId}
                 readOnly
-                className="flex-1 px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-[#F5F5F5]"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="flex-1 px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-[#F4F4F5]"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
               <button
                 onClick={() =>
@@ -1125,7 +1125,7 @@ function FormEditor({
                     invoiceId: generateInvoiceId(),
                   })
                 }
-                className="px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
+                className="px-4 py-2.5 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-all duration-200 cursor-pointer"
                 title="Regenerate ID"
               >
                 <RefreshCw className="w-5 h-5" />
@@ -1136,7 +1136,7 @@ function FormEditor({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label
-                className="block text-[#6B6B6B] text-sm mb-1.5"
+                className="block text-[#71717B] text-sm mb-1.5"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Issue Date
@@ -1151,13 +1151,13 @@ function FormEditor({
                     dueDate: getDueDateFromIssueDate(newIssueDate)
                   });
                 }}
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
             <div>
               <label
-                className="block text-[#6B6B6B] text-sm mb-1.5"
+                className="block text-[#71717B] text-sm mb-1.5"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Due Date
@@ -1168,8 +1168,8 @@ function FormEditor({
                 onChange={(e) =>
                   updateInvoice({ dueDate: e.target.value })
                 }
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
           </div>
@@ -1191,7 +1191,7 @@ function FormEditor({
         <div className="space-y-3">
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-1.5"
+              className="block text-[#71717B] text-sm mb-1.5"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Client Name
@@ -1212,24 +1212,24 @@ function FormEditor({
                   setTimeout(() => setShowClientDropdown(false), 200);
                 }}
                 placeholder="Enter or select client name"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent cursor-pointer"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent cursor-pointer"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
               {showClientDropdown && filteredClients.length > 0 && (
                 <div 
-                  className="absolute z-10 w-full mt-1 bg-white border border-[#E0E0E0] rounded-lg shadow-lg max-h-60 overflow-y-auto"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="absolute z-10 w-full mt-1 bg-white border border-[#E4E4E7] rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   {filteredClients.map((client) => (
                     <div
                       key={client.id}
                       onClick={() => selectClient(client)}
-                      className="px-4 py-3 hover:bg-[#F5F5F5] cursor-pointer transition-colors border-b border-[#F0F0F0] last:border-b-0"
+                      className="px-4 py-3 hover:bg-[#FAFAFA] cursor-pointer transition-colors border-b border-[#ECECEE] last:border-b-0"
                     >
-                      <div className="font-medium text-[#1A1A1A]">
+                      <div className="font-medium text-[#18181B]">
                         {client.clientName}
                       </div>
-                      <div className="text-sm text-[#6B6B6B] mt-0.5">
+                      <div className="text-sm text-[#71717B] mt-0.5">
                         {client.clientAddress}
                         {client.clientCity && `, ${client.clientCity}`}
                         {client.clientState && `, ${client.clientState}`}
@@ -1243,7 +1243,7 @@ function FormEditor({
 
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-1.5"
+              className="block text-[#71717B] text-sm mb-1.5"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Address
@@ -1255,15 +1255,15 @@ function FormEditor({
                 updateInvoice({ clientAddress: e.target.value })
               }
               placeholder="Street address"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+              style={{ fontFamily: "Manrope, sans-serif" }}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label
-                className="block text-[#6B6B6B] text-sm mb-1.5"
+                className="block text-[#71717B] text-sm mb-1.5"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 City
@@ -1275,13 +1275,13 @@ function FormEditor({
                   updateInvoice({ clientCity: e.target.value })
                 }
                 placeholder="City"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
             <div>
               <label
-                className="block text-[#6B6B6B] text-sm mb-1.5"
+                className="block text-[#71717B] text-sm mb-1.5"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 State
@@ -1294,8 +1294,8 @@ function FormEditor({
                       clientState: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent appearance-none cursor-pointer"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   {US_STATES.map((state) => (
                     <option key={state} value={state}>
@@ -1303,7 +1303,7 @@ function FormEditor({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B6B6B] pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717B] pointer-events-none" />
               </div>
             </div>
           </div>
@@ -1311,7 +1311,7 @@ function FormEditor({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label
-                className="block text-[#6B6B6B] text-sm mb-1.5"
+                className="block text-[#71717B] text-sm mb-1.5"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Zip Code
@@ -1323,13 +1323,13 @@ function FormEditor({
                   updateInvoice({ clientZip: e.target.value })
                 }
                 placeholder="Zip"
-                className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
             <div>
               <label
-                className="block text-[#6B6B6B] text-sm mb-1.5"
+                className="block text-[#71717B] text-sm mb-1.5"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Country
@@ -1342,8 +1342,8 @@ function FormEditor({
                       clientCountry: e.target.value,
                     })
                   }
-                  className="w-full pl-4 pr-10 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent appearance-none cursor-pointer"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full pl-4 pr-10 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent appearance-none cursor-pointer"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   {COUNTRIES.map((country) => (
                     <option key={country} value={country}>
@@ -1351,7 +1351,7 @@ function FormEditor({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B6B6B] pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717B] pointer-events-none" />
               </div>
             </div>
           </div>
@@ -1377,11 +1377,11 @@ function FormEditor({
               {invoiceData.lineItems.map((item, index) => (
                 <div
                   key={item.id}
-                  className="p-4 border border-[#E0E0E0] rounded-lg space-y-3"
+                  className="p-4 border border-[#E4E4E7] rounded-lg space-y-3"
                 >
                   <div className="flex justify-between items-center">
                     <span
-                      className="text-sm text-[#6B6B6B]"
+                      className="text-sm text-[#71717B]"
                       style={{ fontFamily: "Manrope, sans-serif" }}
                     >
                       Item {index + 1}
@@ -1408,11 +1408,11 @@ function FormEditor({
                         setTimeout(() => setActiveItemDropdown(null), 200);
                       }}
                       placeholder="Item description"
-                      className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                      style={{ fontFamily: "Inter, sans-serif" }}
+                      className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
                     />
                     {activeItemDropdown === item.id && getFilteredSavedItems(item.description).length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-[#E0E0E0] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-[#E4E4E7] rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         {getFilteredSavedItems(item.description).map((savedItem) => (
                           <div
                             key={savedItem.id}
@@ -1421,12 +1421,12 @@ function FormEditor({
                               updateLineItem(item.id, "unitPrice", savedItem.unitPrice);
                               setActiveItemDropdown(null);
                             }}
-                            className="px-4 py-3 hover:bg-[#F5F5F5] cursor-pointer transition-colors border-b border-[#F0F0F0] last:border-b-0 flex items-center justify-between"
+                            className="px-4 py-3 hover:bg-[#FAFAFA] cursor-pointer transition-colors border-b border-[#ECECEE] last:border-b-0 flex items-center justify-between"
                           >
-                            <span className="text-sm font-medium text-[#1A1A1A]" style={{ fontFamily: "Inter, sans-serif" }}>
+                            <span className="text-sm font-medium text-[#18181B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                               {savedItem.description}
                             </span>
-                            <span className="text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+                            <span className="text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                               ${savedItem.unitPrice.toFixed(2)}
                             </span>
                           </div>
@@ -1438,7 +1438,7 @@ function FormEditor({
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label
-                        className="block text-[#6B6B6B] text-xs mb-1"
+                        className="block text-[#71717B] text-xs mb-1"
                         style={{
                           fontFamily: "Manrope, sans-serif",
                         }}
@@ -1456,14 +1456,14 @@ function FormEditor({
                             parseFloat(e.target.value) || 0,
                           )
                         }
-                        className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                        style={{ fontFamily: "Inter, sans-serif" }}
+                        className="w-full px-3 py-2 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                        style={{ fontFamily: "Manrope, sans-serif" }}
                       />
                     </div>
 
                     <div>
                       <label
-                        className="block text-[#6B6B6B] text-xs mb-1"
+                        className="block text-[#71717B] text-xs mb-1"
                         style={{
                           fontFamily: "Manrope, sans-serif",
                         }}
@@ -1472,9 +1472,9 @@ function FormEditor({
                       </label>
                       <div className="relative">
                         <span
-                          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6B6B]"
+                          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717B]"
                           style={{
-                            fontFamily: "Inter, sans-serif",
+                            fontFamily: "Manrope, sans-serif",
                           }}
                         >
                           $
@@ -1491,9 +1491,9 @@ function FormEditor({
                               parseFloat(e.target.value) || 0,
                             )
                           }
-                          className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
+                          className="w-full pl-7 pr-3 py-2 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
                           style={{
-                            fontFamily: "Inter, sans-serif",
+                            fontFamily: "Manrope, sans-serif",
                           }}
                         />
                       </div>
@@ -1501,7 +1501,7 @@ function FormEditor({
 
                     <div>
                       <label
-                        className="block text-[#6B6B6B] text-xs mb-1"
+                        className="block text-[#71717B] text-xs mb-1"
                         style={{
                           fontFamily: "Manrope, sans-serif",
                         }}
@@ -1509,8 +1509,8 @@ function FormEditor({
                         Total
                       </label>
                       <div
-                        className="px-3 py-2 border border-[#E0E0E0] rounded-lg bg-[#F5F5F5]"
-                        style={{ fontFamily: "Inter, sans-serif" }}
+                        className="px-3 py-2 border border-[#E4E4E7] rounded-lg bg-[#F4F4F5]"
+                        style={{ fontFamily: "Manrope, sans-serif" }}
                       >
                         $
                         {(item.quantity * item.unitPrice).toFixed(
@@ -1527,7 +1527,7 @@ function FormEditor({
           {/* Add Item Button */}
           <button
             onClick={addLineItem}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-all duration-200 cursor-pointer ${
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#006045] text-[#006045] rounded-lg hover:bg-[#E8F4F0] transition-all duration-200 cursor-pointer ${
               invoiceData.lineItems.length > 0 ? "mt-4" : ""
             }`}
             style={{
@@ -1556,12 +1556,12 @@ function FormEditor({
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span
-              className="text-[#6B6B6B]"
+              className="text-[#71717B]"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Subtotal
             </span>
-            <span style={{ fontFamily: "Inter, sans-serif" }}>
+            <span style={{ fontFamily: "Manrope, sans-serif" }}>
               ${calculateSubtotal().toFixed(2)}
             </span>
           </div>
@@ -1569,7 +1569,7 @@ function FormEditor({
           <div>
             <div className="flex items-center justify-between gap-3 mb-1.5">
               <label
-                className="text-[#6B6B6B] text-sm"
+                className="text-[#71717B] text-sm"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Tax %:
@@ -1578,7 +1578,7 @@ function FormEditor({
                 {invoiceData.taxPercent > 0 ? (
                   <button
                     onClick={() => updateInvoice({ taxPercent: 0 })}
-                    className="px-3 py-2 border border-[#E0E0E0] text-[#6B6B6B] rounded-lg hover:bg-[#F5F5F5] transition-all text-sm whitespace-nowrap cursor-pointer"
+                    className="px-3 py-2 border border-[#E4E4E7] text-[#71717B] rounded-lg hover:bg-[#FAFAFA] transition-all text-sm whitespace-nowrap cursor-pointer"
                     style={{
                       fontFamily: "Manrope, sans-serif",
                       fontWeight: 600,
@@ -1589,7 +1589,7 @@ function FormEditor({
                 ) : (
                   <button
                     onClick={applyTax}
-                    className="px-3 py-2 border border-[#4A5D23] text-[#4A5D23] rounded-lg hover:bg-[#F5F7EE] transition-all text-sm whitespace-nowrap cursor-pointer"
+                    className="px-3 py-2 border border-[#006045] text-[#006045] rounded-lg hover:bg-[#E8F4F0] transition-all text-sm whitespace-nowrap cursor-pointer"
                     style={{
                       fontFamily: "Manrope, sans-serif",
                       fontWeight: 600,
@@ -1611,12 +1611,12 @@ function FormEditor({
                           parseFloat(e.target.value) || 0,
                       })
                     }
-                    className="w-full px-3 py-2 pr-7 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                    style={{ fontFamily: "Inter, sans-serif" }}
+                    className="w-full px-3 py-2 pr-7 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
                   />
                   <span
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B6B6B] pointer-events-none"
-                    style={{ fontFamily: "Inter, sans-serif" }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#71717B] pointer-events-none"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
                   >
                     %
                   </span>
@@ -1627,17 +1627,17 @@ function FormEditor({
 
           <div className="flex justify-between items-center">
             <span
-              className="text-[#6B6B6B]"
+              className="text-[#71717B]"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Tax Amount
             </span>
-            <span style={{ fontFamily: "Inter, sans-serif" }}>
+            <span style={{ fontFamily: "Manrope, sans-serif" }}>
               ${calculateTax().toFixed(2)}
             </span>
           </div>
 
-          <div className="pt-3 border-t border-[#E0E0E0]">
+          <div className="pt-3 border-t border-[#E4E4E7]">
             <div className="flex justify-between items-center">
               <span
                 className="text-xl"
@@ -1649,7 +1649,7 @@ function FormEditor({
                 Total Due
               </span>
               <span
-                className="text-2xl text-[#4A5D23]"
+                className="text-2xl text-[#006045]"
                 style={{
                   fontFamily: "Manrope, sans-serif",
                   fontWeight: 700,
@@ -1681,8 +1681,8 @@ function FormEditor({
           }
           placeholder="Payment due within 30 days"
           rows={3}
-          className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent resize-none"
-          style={{ fontFamily: "Inter, sans-serif" }}
+          className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent resize-none"
+          style={{ fontFamily: "Manrope, sans-serif" }}
         />
       </section>
 
@@ -1751,7 +1751,7 @@ const InvoicePreview = React.forwardRef<
           ref={ref}
           className="invoice-pdf-container bg-white shadow-lg flex flex-col"
           style={{
-            fontFamily: "Inter, sans-serif",
+            fontFamily: "Manrope, sans-serif",
             color: "#000000",
             backgroundColor: "#FFFFFF",
             width: LETTER_W,
@@ -1763,7 +1763,7 @@ const InvoicePreview = React.forwardRef<
             .invoice-pdf-container * {
               color: inherit !important;
               background-color: transparent !important;
-              border-color: #E0E0E0 !important;
+              border-color: #E4E4E7 !important;
             }
             .invoice-pdf-container .bg-black {
               background-color: #000000 !important;
@@ -1780,17 +1780,17 @@ const InvoicePreview = React.forwardRef<
             .invoice-pdf-container .text-black {
               color: #000000 !important;
             }
-            .invoice-pdf-container .text-\\[\\#6B6B6B\\] {
-              color: #6B6B6B !important;
+            .invoice-pdf-container .text-\\[\\#71717B\\] {
+              color: #71717B !important;
             }
-            .invoice-pdf-container .text-\\[\\#22C55E\\] {
-              color: #22C55E !important;
+            .invoice-pdf-container .text-\\[\\#006045\\] {
+              color: #006045 !important;
             }
             .invoice-pdf-container .border-black {
               border-color: #000000 !important;
             }
-            .invoice-pdf-container .border-\\[\\#E0E0E0\\] {
-              border-color: #E0E0E0 !important;
+            .invoice-pdf-container .border-\\[\\#E4E4E7\\] {
+              border-color: #E4E4E7 !important;
             }
           `}</style>
 
@@ -1836,17 +1836,17 @@ const InvoicePreview = React.forwardRef<
               {companySettings.companyAddress
                 .split("\n")
                 .map((line, i) => (
-                  <div key={i} className="text-[#6B6B6B]">
+                  <div key={i} className="text-[#71717B]">
                     {line}
                   </div>
                 ))}
               {companySettings.companyEmail && (
-                <div className="text-[#6B6B6B]">
+                <div className="text-[#71717B]">
                   {companySettings.companyEmail}
                 </div>
               )}
               {companySettings.companyPhone && (
-                <div className="text-[#6B6B6B]">
+                <div className="text-[#71717B]">
                   {companySettings.companyPhone}
                 </div>
               )}
@@ -1868,7 +1868,7 @@ const InvoicePreview = React.forwardRef<
             </h1>
             <div className="text-right text-sm">
               <div className="mb-1">
-                <span className="text-[#6B6B6B]">
+                <span className="text-[#71717B]">
                   Invoice ID:{" "}
                 </span>
                 <span
@@ -1881,13 +1881,13 @@ const InvoicePreview = React.forwardRef<
                 </span>
               </div>
               <div className="mb-1">
-                <span className="text-[#6B6B6B]">
+                <span className="text-[#71717B]">
                   Issue Date:{" "}
                 </span>
                 {invoiceData.issueDate || "—"}
               </div>
               <div>
-                <span className="text-[#6B6B6B]">
+                <span className="text-[#71717B]">
                   Due Date:{" "}
                 </span>
                 {invoiceData.dueDate || "—"}
@@ -1919,17 +1919,17 @@ const InvoicePreview = React.forwardRef<
                 {companySettings.companyAddress
                   .split("\n")
                   .map((line, i) => (
-                    <div key={i} className="text-[#6B6B6B]">
+                    <div key={i} className="text-[#71717B]">
                       {line}
                     </div>
                   ))}
                 {companySettings.companyEmail && (
-                  <div className="text-[#6B6B6B]">
+                  <div className="text-[#71717B]">
                     {companySettings.companyEmail}
                   </div>
                 )}
                 {companySettings.companyPhone && (
-                  <div className="text-[#6B6B6B]">
+                  <div className="text-[#71717B]">
                     {companySettings.companyPhone}
                   </div>
                 )}
@@ -1955,14 +1955,14 @@ const InvoicePreview = React.forwardRef<
                   {invoiceData.clientName || "—"}
                 </div>
                 {invoiceData.clientAddress && (
-                  <div className={`text-[#6B6B6B]`}>
+                  <div className={`text-[#71717B]`}>
                     {invoiceData.clientAddress}
                   </div>
                 )}
                 {(invoiceData.clientCity ||
                   invoiceData.clientState ||
                   invoiceData.clientZip) && (
-                  <div className="text-[#6B6B6B]">
+                  <div className="text-[#71717B]">
                     {invoiceData.clientCity}
                     {invoiceData.clientCity &&
                       (invoiceData.clientState ||
@@ -1976,7 +1976,7 @@ const InvoicePreview = React.forwardRef<
                   </div>
                 )}
                 {invoiceData.clientCountry && (
-                  <div className="text-[#6B6B6B]">
+                  <div className="text-[#71717B]">
                     {invoiceData.clientCountry}
                   </div>
                 )}
@@ -2038,16 +2038,16 @@ const InvoicePreview = React.forwardRef<
           <div className="flex justify-end mb-8">
             <div className="w-64 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-[#6B6B6B]">Subtotal</span>
+                <span className="text-[#71717B]">Subtotal</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6B6B6B]">
+                <span className="text-[#71717B]">
                   Tax ({invoiceData.taxPercent}%)
                 </span>
                 <span>${tax.toFixed(2)}</span>
               </div>
-              <div className="h-px bg-[#E0E0E0] my-2"></div>
+              <div className="h-px bg-[#E4E4E7] my-2"></div>
               <div className="flex justify-between items-center">
                 <span
                   className="text-lg"
@@ -2059,7 +2059,7 @@ const InvoicePreview = React.forwardRef<
                   Total Due
                 </span>
                 <span
-                  className="text-2xl text-[#22C55E]"
+                  className="text-2xl text-[#006045]"
                   style={{
                     fontFamily: "Manrope, sans-serif",
                     fontWeight: 700,
@@ -2074,8 +2074,8 @@ const InvoicePreview = React.forwardRef<
           {/* Notes */}
           {invoiceData.notes && (
             <>
-              <div className="h-px bg-[#E0E0E0] mb-4"></div>
-              <div className="text-sm italic text-[#6B6B6B] mb-6">
+              <div className="h-px bg-[#E4E4E7] mb-4"></div>
+              <div className="text-sm italic text-[#71717B] mb-6">
                 {invoiceData.notes}
               </div>
             </>
@@ -2083,7 +2083,7 @@ const InvoicePreview = React.forwardRef<
 
           {/* Footer */}
           <div
-            className="mt-auto text-center text-sm text-[#6B6B6B] pt-6 border-t border-[#E0E0E0]"
+            className="mt-auto text-center text-sm text-[#71717B] pt-6 border-t border-[#E4E4E7]"
             style={{ fontFamily: "Manrope, sans-serif" }}
           >
             Thank you for your business.
@@ -2093,7 +2093,7 @@ const InvoicePreview = React.forwardRef<
         </div>{/* closes scaleWrapperRef div */}
 
         {/* Action Buttons */}
-        {!hideButtons && <div className="sticky bottom-0 bg-[#F5F5F5] pt-4 -mx-8 px-8 pb-6">
+        {!hideButtons && <div className="sticky bottom-0 bg-[#F4F4F5] pt-4 -mx-8 px-8 pb-6">
           <style>{`
             .tooltip-wrapper {
               position: relative;
@@ -2111,7 +2111,7 @@ const InvoicePreview = React.forwardRef<
               transform: translateX(-50%);
               margin-bottom: 8px;
               padding: 8px 12px;
-              background-color: #1F2937;
+              background-color: #18181B;
               color: white;
               font-size: 13px;
               border-radius: 6px;
@@ -2119,7 +2119,7 @@ const InvoicePreview = React.forwardRef<
               transition: opacity 0.2s;
               pointer-events: none;
               z-index: 50;
-              font-family: Inter, sans-serif;
+              font-family: Manrope, sans-serif;
             }
             .tooltip-text::after {
               content: "";
@@ -2129,7 +2129,7 @@ const InvoicePreview = React.forwardRef<
               margin-left: -5px;
               border-width: 5px;
               border-style: solid;
-              border-color: #1F2937 transparent transparent transparent;
+              border-color: #18181B transparent transparent transparent;
             }
           `}</style>
           {compact ? (
@@ -2138,7 +2138,7 @@ const InvoicePreview = React.forwardRef<
               {!hideEditButton && (
                 <button
                   onClick={onEdit ?? (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
-                  className="p-2.5 rounded-lg border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                  className="p-2.5 rounded-lg border border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA] transition-colors cursor-pointer"
                   title="Edit"
                 >
                   <ArrowLeft className="w-5 h-5" />
@@ -2153,7 +2153,7 @@ const InvoicePreview = React.forwardRef<
                   disabled={!isInvoiceSaved}
                   className={`p-2.5 rounded-lg border transition-colors ${
                     isInvoiceSaved
-                      ? 'border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5] cursor-pointer'
+                      ? 'border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA] cursor-pointer'
                       : 'border-gray-200 text-gray-300 cursor-not-allowed'
                   }`}
                   title="Download"
@@ -2163,7 +2163,7 @@ const InvoicePreview = React.forwardRef<
               </div>
               <button
                 onClick={onSave}
-                className="flex-1 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+                className="flex-1 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
               >
                 Save
@@ -2182,7 +2182,7 @@ const InvoicePreview = React.forwardRef<
                   disabled={!isInvoiceSaved}
                   className={`px-6 py-3 rounded-lg transition-all duration-200 border ${
                     isInvoiceSaved
-                      ? 'border-[#4A5D23] text-[#4A5D23] hover:bg-[#F5F7EE] cursor-pointer'
+                      ? 'border-[#006045] text-[#006045] hover:bg-[#E8F4F0] cursor-pointer'
                       : 'border-gray-300 text-gray-400 cursor-not-allowed opacity-60'
                   }`}
                   style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
@@ -2194,7 +2194,7 @@ const InvoicePreview = React.forwardRef<
               {onCancel && (
                 <button
                   onClick={onCancel}
-                  className="px-6 py-3 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
+                  className="px-6 py-3 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-all duration-200 cursor-pointer"
                   style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
                 >
                   Cancel
@@ -2202,7 +2202,7 @@ const InvoicePreview = React.forwardRef<
               )}
               <button
                 onClick={onSave}
-                className="px-12 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer"
+                className="px-12 py-3 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-all duration-200 cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
               >
                 Save

@@ -112,37 +112,37 @@ export default function SettingsPage() {
   };
 
   const inputClass =
-    "w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent";
+    "w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent";
 
   return (
-    <div className="min-h-screen bg-[#FCF9F8]">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <Building2 className="w-7 h-7 text-[#1A1A1A]" />
+          <Building2 className="w-7 h-7 text-[#18181B]" />
           <h1
             className="text-2xl sm:text-3xl"
-            style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
+            style={{ fontFamily: "Newsreader, Georgia, serif", fontWeight: 500 }}
           >
             Company Settings
           </h1>
         </div>
 
         {loading ? (
-          <div className="text-center py-16 text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+          <div className="text-center py-16 text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
             Loading settings...
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-[#E0E0E0] p-6 space-y-6">
+          <div className="bg-white rounded-2xl border border-[#E4E4E7] p-6 space-y-6">
             {/* Logo */}
             <div>
-              <label className="block text-sm font-medium text-[#6B6B6B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <label className="block text-sm font-medium text-[#71717B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Company Logo
               </label>
               <div className="flex items-center gap-4">
                 {formData.logoUrl && (
-                  <div className="w-20 h-20 border border-[#E0E0E0] rounded-lg overflow-hidden flex items-center justify-center bg-[#F5F5F5] flex-shrink-0">
+                  <div className="w-20 h-20 border border-[#E4E4E7] rounded-lg overflow-hidden flex items-center justify-center bg-[#F4F4F5] flex-shrink-0">
                     <img src={formData.logoUrl} alt="Company logo" className="w-full h-full object-contain" />
                   </div>
                 )}
@@ -157,13 +157,13 @@ export default function SettingsPage() {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors disabled:opacity-50 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors disabled:opacity-50 cursor-pointer"
                     style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
                   >
                     <Upload className="w-4 h-4" />
                     {uploading ? "Uploading..." : "Upload Logo"}
                   </button>
-                  <p className="text-xs text-[#6B6B6B] mt-1" style={{ fontFamily: "Inter, sans-serif" }}>
+                  <p className="text-xs text-[#71717B] mt-1" style={{ fontFamily: "Manrope, sans-serif" }}>
                     PNG, JPG, or SVG (max 5MB)
                   </p>
                 </div>
@@ -172,7 +172,7 @@ export default function SettingsPage() {
 
             {/* Company Name */}
             <div>
-              <label className="block text-sm font-medium text-[#6B6B6B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <label className="block text-sm font-medium text-[#71717B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Company Name
               </label>
               <input
@@ -181,13 +181,13 @@ export default function SettingsPage() {
                 onChange={(e) => setFormData((prev) => ({ ...prev, companyName: e.target.value }))}
                 placeholder="Your Company Name"
                 className={inputClass}
-                style={{ fontFamily: "Inter, sans-serif" }}
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
 
             {/* Company Address */}
             <div>
-              <label className="block text-sm font-medium text-[#6B6B6B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <label className="block text-sm font-medium text-[#71717B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Company Address
               </label>
               <textarea
@@ -196,13 +196,13 @@ export default function SettingsPage() {
                 placeholder={"Street Address\nCity, State ZIP\nCountry"}
                 rows={4}
                 className={`${inputClass} resize-none`}
-                style={{ fontFamily: "Inter, sans-serif" }}
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
 
             {/* Company Email */}
             <div>
-              <label className="block text-sm font-medium text-[#6B6B6B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <label className="block text-sm font-medium text-[#71717B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Company Email
               </label>
               <input
@@ -211,13 +211,13 @@ export default function SettingsPage() {
                 onChange={(e) => setFormData((prev) => ({ ...prev, companyEmail: e.target.value }))}
                 placeholder="yourcompany@example.com"
                 className={inputClass}
-                style={{ fontFamily: "Inter, sans-serif" }}
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
 
             {/* Company Phone */}
             <div>
-              <label className="block text-sm font-medium text-[#6B6B6B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <label className="block text-sm font-medium text-[#71717B] mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Company Phone
               </label>
               <input
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                 onChange={(e) => setFormData((prev) => ({ ...prev, companyPhone: e.target.value }))}
                 placeholder="(123) 456-7890"
                 className={inputClass}
-                style={{ fontFamily: "Inter, sans-serif" }}
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
 
@@ -235,7 +235,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full px-6 py-3 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors disabled:opacity-50 cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 700 }}
               >
                 {saving ? "Saving..." : "Save Changes"}

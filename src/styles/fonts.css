@@ -1,2 +1,12 @@
+/* design.md §3 — two families, two jobs.
+   Manrope is the UI voice (body, buttons, labels, tables, data).
+   Newsreader is the display voice (page titles only in this app).
+
+   §3 lists Manrope 500/600/700/800 only, but 400 is retained: theme.css still
+   drives `input` (and the default body weight) from --font-weight-normal: 400.
+   Shipping without a 400 face makes the variable font clamp those to 500, which
+   both thickens body text and collapses `font-medium` into the default weight,
+   erasing the 400/500 emphasis distinction the app already relies on. Moving the
+   app onto a 500-weight body per §3 is a separate typography change. */
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;1,500&display=swap');

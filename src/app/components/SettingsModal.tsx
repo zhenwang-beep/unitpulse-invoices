@@ -128,7 +128,7 @@ export function SettingsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#E0E0E0]">
+        <div className="flex items-center justify-between p-6 border-b border-[#E4E4E7]">
           <h2
             className="text-2xl"
             style={{
@@ -140,7 +140,7 @@ export function SettingsModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer"
+            className="p-2 hover:bg-[#FAFAFA] rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -151,14 +151,14 @@ export function SettingsModal({
           {/* Logo Upload */}
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-2"
+              className="block text-[#71717B] text-sm mb-2"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Company Logo
             </label>
             <div className="flex items-center gap-4">
               {formData.logoUrl && (
-                <div className="w-20 h-20 border border-[#E0E0E0] rounded-lg overflow-hidden flex items-center justify-center bg-[#F5F5F5]">
+                <div className="w-20 h-20 border border-[#E4E4E7] rounded-lg overflow-hidden flex items-center justify-center bg-[#F4F4F5]">
                   <img
                     src={formData.logoUrl}
                     alt="Company logo"
@@ -177,7 +177,7 @@ export function SettingsModal({
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 disabled:opacity-50 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-all duration-200 disabled:opacity-50 cursor-pointer"
                   style={{
                     fontFamily: "Manrope, sans-serif",
                     fontWeight: 600,
@@ -187,8 +187,8 @@ export function SettingsModal({
                   {uploading ? "Uploading..." : "Upload Logo"}
                 </button>
                 <p
-                  className="text-xs text-[#6B6B6B] mt-1"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="text-xs text-[#71717B] mt-1"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 >
                   PNG, JPG, or SVG (max 5MB)
                 </p>
@@ -199,7 +199,7 @@ export function SettingsModal({
           {/* Company Name */}
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-2"
+              className="block text-[#71717B] text-sm mb-2"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Company Name
@@ -214,15 +214,15 @@ export function SettingsModal({
                 }))
               }
               placeholder="Your Company Name"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+              style={{ fontFamily: "Manrope, sans-serif" }}
             />
           </div>
 
           {/* Company Address */}
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-2"
+              className="block text-[#71717B] text-sm mb-2"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Company Address
@@ -237,15 +237,15 @@ export function SettingsModal({
               }
               placeholder="Street Address&#10;City, State ZIP&#10;Country"
               rows={4}
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent resize-none"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent resize-none"
+              style={{ fontFamily: "Manrope, sans-serif" }}
             />
           </div>
 
           {/* Company Email */}
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-2"
+              className="block text-[#71717B] text-sm mb-2"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Company Email
@@ -260,15 +260,15 @@ export function SettingsModal({
                 }))
               }
               placeholder="yourcompany@example.com"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+              style={{ fontFamily: "Manrope, sans-serif" }}
             />
           </div>
 
           {/* Company Phone */}
           <div>
             <label
-              className="block text-[#6B6B6B] text-sm mb-2"
+              className="block text-[#71717B] text-sm mb-2"
               style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Company Phone
@@ -283,17 +283,17 @@ export function SettingsModal({
                 }))
               }
               placeholder="(123) 456-7890"
-              className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+              style={{ fontFamily: "Manrope, sans-serif" }}
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center gap-3 p-6 border-t border-[#E0E0E0]">
+        <div className="flex items-center gap-3 p-6 border-t border-[#E4E4E7]">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-all duration-200 cursor-pointer"
+            className="flex-1 px-6 py-3 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-all duration-200 cursor-pointer"
             style={{
               fontFamily: "Manrope, sans-serif",
               fontWeight: 600,
@@ -303,7 +303,7 @@ export function SettingsModal({
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-all duration-200 cursor-pointer"
+            className="flex-1 px-6 py-3 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-all duration-200 cursor-pointer"
             style={{
               fontFamily: "Manrope, sans-serif",
               fontWeight: 700,

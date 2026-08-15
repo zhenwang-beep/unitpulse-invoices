@@ -139,7 +139,7 @@ export function generateInvoicePDF(
   addressLines.forEach((line) => {
     addText(line.trim(), pageWidth - margin, rightY, {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
       align: "right",
     });
     rightY += 13;
@@ -153,7 +153,7 @@ export function generateInvoicePDF(
       rightY,
       {
         size: 9,
-        color: "#6B6B6B",
+        color: "#71717B",
         align: "right",
       },
     );
@@ -168,7 +168,7 @@ export function generateInvoicePDF(
       rightY,
       {
         size: 9,
-        color: "#6B6B6B",
+        color: "#71717B",
         align: "right",
       },
     );
@@ -211,7 +211,7 @@ export function generateInvoicePDF(
   // Draw label in gray
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(9);
-  pdf.setTextColor("#6B6B6B");
+  pdf.setTextColor("#71717B");
   pdf.text(idLabel, startX, metaY);
 
   // Draw value in bold black right after the label
@@ -227,7 +227,7 @@ export function generateInvoicePDF(
     metaY,
     {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
       align: "right",
     },
   );
@@ -238,7 +238,7 @@ export function generateInvoicePDF(
     metaY,
     {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
       align: "right",
     },
   );
@@ -283,7 +283,7 @@ export function generateInvoicePDF(
   fromAddressLines.forEach((line) => {
     addText(line.trim(), leftCol, fromY, {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
     });
     fromY += 14;
   });
@@ -292,7 +292,7 @@ export function generateInvoicePDF(
   if (companySettings?.companyEmail) {
     addText(companySettings.companyEmail, leftCol, fromY, {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
     });
     fromY += 14;
   }
@@ -301,7 +301,7 @@ export function generateInvoicePDF(
   if (companySettings?.companyPhone) {
     addText(companySettings.companyPhone, leftCol, fromY, {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
     });
     fromY += 14;
   }
@@ -310,7 +310,7 @@ export function generateInvoicePDF(
   if (invoiceData.clientAddress) {
     addText(invoiceData.clientAddress, rightCol, billToY, {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
     });
     billToY += 14;
   }
@@ -333,7 +333,7 @@ export function generateInvoicePDF(
     }${invoiceData.clientZip}`;
     addText(cityStateZip, rightCol, billToY, {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
     });
     billToY += 14;
   }
@@ -342,7 +342,7 @@ export function generateInvoicePDF(
   if (invoiceData.clientCountry) {
     addText(invoiceData.clientCountry, rightCol, billToY, {
       size: 9,
-      color: "#6B6B6B",
+      color: "#71717B",
     });
     billToY += 14;
   }
@@ -442,7 +442,7 @@ export function generateInvoicePDF(
 
   addText("Subtotal", summaryX, yPos, {
     size: 9,
-    color: "#6B6B6B",
+    color: "#71717B",
   });
   addText(`$${subtotal.toFixed(2)}`, pageWidth - margin, yPos, {
     size: 9,
@@ -452,7 +452,7 @@ export function generateInvoicePDF(
 
   addText(`Tax (${invoiceData.taxPercent}%)`, summaryX, yPos, {
     size: 9,
-    color: "#6B6B6B",
+    color: "#71717B",
   });
   addText(`$${tax.toFixed(2)}`, pageWidth - margin, yPos, {
     size: 9,
@@ -461,7 +461,7 @@ export function generateInvoicePDF(
   yPos += 20;
 
   // Divider line
-  drawLine(summaryX, yPos, pageWidth - margin, yPos, "#E0E0E0");
+  drawLine(summaryX, yPos, pageWidth - margin, yPos, "#E4E4E7");
   yPos += 20;
 
   addText("Total Due", summaryX, yPos, {
@@ -475,7 +475,7 @@ export function generateInvoicePDF(
     {
       size: 20,
       style: "bold",
-      color: "#22C55E",
+      color: "#006045",
       align: "right",
     },
   );
@@ -485,7 +485,7 @@ export function generateInvoicePDF(
   // === NOTES ===
   if (invoiceData.notes) {
     yPos += 12;
-    drawLine(margin, yPos, pageWidth - margin, yPos, "#E0E0E0");
+    drawLine(margin, yPos, pageWidth - margin, yPos, "#E4E4E7");
     yPos += 18;
 
     const notesLines = pdf.splitTextToSize(
@@ -494,7 +494,7 @@ export function generateInvoicePDF(
     );
     pdf.setFont("helvetica", "italic");
     pdf.setFontSize(9);
-    pdf.setTextColor("#6B6B6B");
+    pdf.setTextColor("#71717B");
     pdf.text(notesLines, margin, yPos);
     yPos += notesLines.length * 13 + 15;
   }
@@ -503,11 +503,11 @@ export function generateInvoicePDF(
   if (yPos < pageHeight - 90) {
     yPos = pageHeight - 70;
   }
-  drawLine(margin, yPos, pageWidth - margin, yPos, "#E0E0E0");
+  drawLine(margin, yPos, pageWidth - margin, yPos, "#E4E4E7");
   yPos += 18;
   addText("Thank you for your business.", pageWidth / 2, yPos, {
     size: 9,
-    color: "#6B6B6B",
+    color: "#71717B",
     align: "center",
   });
 
