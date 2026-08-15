@@ -39,19 +39,44 @@ const SERIF = "Newsreader, Georgia, serif";
 /* Small form primitives — match the invoice form's idiom              */
 /* ------------------------------------------------------------------ */
 
-function Label({ children }: { children: React.ReactNode }) {
+function Label({
+  children,
+  required,
+  htmlFor,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+  htmlFor?: string;
+}) {
   return (
     <label
+      htmlFor={htmlFor}
       className="block text-sm mb-1.5 text-[#52525C]"
       style={{ fontFamily: SANS, fontWeight: 600 }}
     >
       {children}
+      {required && (
+        <span className="text-[#D84B4B] ml-0.5" aria-hidden="true">
+          *
+        </span>
+      )}
     </label>
   );
 }
 
 const inputCls =
   "w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent";
+const inputErrCls = inputCls.replace("border-[#E4E4E7]", "border-[#D84B4B]");
+
+/**
+ * Icon buttons that sit beside an input must match its height and be square.
+ * The inputs render at 46px (px-4 py-2.5 on a 16px base), and p-2.5 around a
+ * 16px icon gave 38px — visibly short next to the field it belongs to.
+ */
+const ICON_BTN =
+  "shrink-0 h-[46px] w-[46px] flex items-center justify-center rounded-lg border " +
+  "border-[#E4E4E7] text-[#71717B] hover:text-red-600 hover:bg-red-50 " +
+  "transition-colors cursor-pointer";
 
 function Field({
   label,
@@ -60,6 +85,8 @@ function Field({
   type = "text",
   placeholder,
   min,
+  required,
+  error,
 }: {
   label: string;
   value: string | number;
@@ -67,19 +94,28 @@ function Field({
   type?: string;
   placeholder?: string;
   min?: string;
+  required?: boolean;
+  error?: string;
 }) {
   return (
     <div>
-      <Label>{label}</Label>
+      <Label required={required}>{label}</Label>
       <input
         type={type}
         value={value}
         min={min}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className={inputCls}
+        className={error ? inputErrCls : inputCls}
         style={{ fontFamily: SANS }}
+        aria-required={required || undefined}
+        aria-invalid={error ? true : undefined}
       />
+      {error && (
+        <p className="mt-1 text-xs text-[#C0392F]" style={{ fontFamily: SANS }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -149,7 +185,7 @@ function Section({
         )}
       </button>
       {open && (
-        <div className="px-5 pb-5 pt-1 space-y-4 border-t border-[#ECECEE]">
+        <div className="px-5 pb-5 pt-1 space-y-4">
           {children}
         </div>
       )}
@@ -186,7 +222,7 @@ function BulletEditor({
             onClick={() => onChange(items.filter((_, j) => j !== i))}
             title="Remove"
             aria-label={`Remove item ${i + 1}`}
-            className="p-2.5 rounded-lg border border-[#E4E4E7] text-[#71717B] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+            className={ICON_BTN}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -225,6 +261,13 @@ export default function QuoteGenerator() {
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(id ?? null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
+  // Same affordance as the invoice form: pick an existing client instead of
+  // retyping one, which is also how the two stay in sync.
+  const [savedClients, setSavedClients] = useState<any[]>([]);
+  const [clientQueryOpen, setClientQueryOpen] = useState(false);
+  const clientBoxRef = useRef<HTMLDivElement>(null);
+  // Field-level validation, surfaced on save.
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Cleared by the first edit; see the settings loader below.
   const pristineRef = useRef(true);
@@ -281,6 +324,31 @@ export default function QuoteGenerator() {
     })();
   }, [isEditMode]);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetchAPI("/clients");
+        if (!res.ok) return;
+        const data = await res.json();
+        setSavedClients(data.clients || []);
+      } catch (e) {
+        console.error("Error loading clients:", e);
+      }
+    })();
+  }, []);
+
+  // Close the client list on an outside click, like every other menu here.
+  useEffect(() => {
+    if (!clientQueryOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (clientBoxRef.current && !clientBoxRef.current.contains(e.target as Node)) {
+        setClientQueryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [clientQueryOpen]);
+
   /* ---------- load existing quote ---------- */
   useEffect(() => {
     if (!id) return;
@@ -306,6 +374,27 @@ export default function QuoteGenerator() {
 
   const subtotal = quoteSubtotal(quote.lineItems);
   const total = monthlyRecurringTotal(quote.lineItems);
+
+  const matchingClients = quote.clientName.trim()
+    ? savedClients.filter((c) =>
+        (c.clientName || "").toLowerCase().includes(quote.clientName.toLowerCase()),
+      )
+    : savedClients;
+
+  const selectClient = (c: any) => {
+    const locality = [c.clientCity, c.clientState, c.clientZip]
+      .filter(Boolean)
+      .join(" ");
+    patch({
+      clientName: c.clientName || "",
+      clientAddress: c.clientAddress || "",
+      // The dark band shows one address line; compose it from the parts the
+      // clients list stores separately.
+      preparedForAddress: [c.clientAddress, locality].filter(Boolean).join(", "),
+    });
+    setErrors((e) => ({ ...e, clientName: "" }));
+    setClientQueryOpen(false);
+  };
 
   /* ---------- line items ---------- */
   const updateLineItem = (
@@ -381,12 +470,30 @@ export default function QuoteGenerator() {
 
   /* ---------- save ---------- */
   const save = async () => {
-    if (!quote.clientName.trim()) {
-      toast.error("Add a client name before saving");
-      return;
+    // Validate everything at once so the user sees every problem, not the
+    // first one; each message also lands on its own field.
+    const next: Record<string, string> = {};
+    if (!quote.clientName.trim()) next.clientName = "A client name is required.";
+    if (!quote.quoteDate) next.quoteDate = "A quote date is required.";
+    if (!quote.validUntil) next.validUntil = "A valid-until date is required.";
+    if (quote.quoteDate && quote.validUntil && quote.validUntil < quote.quoteDate) {
+      next.validUntil = "Cannot be before the quote date.";
     }
-    if (quote.validUntil < quote.quoteDate) {
-      toast.error("“Valid until” cannot be before the quote date");
+    if (quote.lineItems.length === 0) {
+      next.lineItems = "Add at least one service.";
+    }
+    setErrors(next);
+    if (Object.keys(next).length > 0) {
+      const count = Object.keys(next).length;
+      toast.error(
+        count === 1 ? "One field needs attention" : `${count} fields need attention`,
+      );
+      // Move the user to the first problem rather than making them hunt.
+      requestAnimationFrame(() => {
+        const el = document.querySelector<HTMLElement>("[aria-invalid='true']");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        el?.focus?.();
+      });
       return;
     }
     setSaving(true);
@@ -406,6 +513,7 @@ export default function QuoteGenerator() {
         return;
       }
       setSavedId(data.quote.id);
+      setErrors({});
       if (revisionRef.current === revisionAtSend) {
         setQuote(data.quote);
         setDirty(false);
@@ -490,6 +598,8 @@ export default function QuoteGenerator() {
           </div>
           <Field
             label="Quote date"
+            required
+            error={errors.quoteDate}
             type="date"
             value={quote.quoteDate}
             onChange={(v) =>
@@ -503,6 +613,8 @@ export default function QuoteGenerator() {
           />
           <Field
             label="Valid until"
+            required
+            error={errors.validUntil}
             type="date"
             value={quote.validUntil}
             min={quote.quoteDate}
@@ -533,11 +645,59 @@ export default function QuoteGenerator() {
       </Section>
 
       <Section title="Prepared for" eyebrow="Client" defaultOpen>
-        <Field
-          label="Client / management company"
-          value={quote.clientName}
-          onChange={(v) => patch({ clientName: v })}
-        />
+        {/* Combobox: type to filter saved clients, or type a brand-new name.
+            Mirrors the invoice form so the two behave identically. */}
+        <div ref={clientBoxRef} className="relative">
+          <Label required>Client / management company</Label>
+          <input
+            type="text"
+            value={quote.clientName}
+            placeholder="Enter or select a client"
+            onChange={(e) => {
+              patch({ clientName: e.target.value });
+              setErrors((x) => ({ ...x, clientName: "" }));
+              setClientQueryOpen(true);
+            }}
+            onFocus={() => setClientQueryOpen(savedClients.length > 0)}
+            className={errors.clientName ? inputErrCls : inputCls}
+            style={{ fontFamily: SANS }}
+            role="combobox"
+            aria-expanded={clientQueryOpen}
+            aria-autocomplete="list"
+            aria-required
+            aria-invalid={errors.clientName ? true : undefined}
+          />
+          {errors.clientName && (
+            <p className="mt-1 text-xs text-[#C0392F]" style={{ fontFamily: SANS }}>
+              {errors.clientName}
+            </p>
+          )}
+          {clientQueryOpen && matchingClients.length > 0 && (
+            <div
+              role="listbox"
+              aria-label="Saved clients"
+              className="absolute z-20 w-full mt-1 bg-white border border-[#E4E4E7] rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              style={{ fontFamily: SANS }}
+            >
+              {matchingClients.map((c) => (
+                <div
+                  key={c.id}
+                  role="option"
+                  aria-selected={c.clientName === quote.clientName}
+                  onClick={() => selectClient(c)}
+                  className="px-4 py-3 hover:bg-[#FAFAFA] cursor-pointer transition-colors border-b border-[#ECECEE] last:border-b-0"
+                >
+                  <div className="font-medium text-[#18181B]">{c.clientName}</div>
+                  <div className="text-sm text-[#71717B] mt-0.5">
+                    {[c.clientAddress, c.clientCity, c.clientState]
+                      .filter(Boolean)
+                      .join(", ") || "—"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
         <Field
           label="Property address"
           value={quote.preparedForAddress}
@@ -615,7 +775,7 @@ export default function QuoteGenerator() {
                   onClick={() => removeLineItem(item.id)}
                   title="Remove service"
                   aria-label={`Remove service ${i + 1}`}
-                  className="mt-7 p-2.5 rounded-lg border border-[#E4E4E7] text-[#71717B] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                  className={`mt-7 ${ICON_BTN}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -654,6 +814,11 @@ export default function QuoteGenerator() {
               </div>
             </div>
           ))}
+          {errors.lineItems && (
+            <p className="text-xs text-[#C0392F]" style={{ fontFamily: SANS }}>
+              {errors.lineItems}
+            </p>
+          )}
           <button
             type="button"
             onClick={addLineItem}
@@ -705,7 +870,7 @@ export default function QuoteGenerator() {
                 onClick={() => removeGroup(g.id)}
                 title="Remove group"
                 aria-label={`Remove scope group ${i + 1}`}
-                className="mt-7 p-2.5 rounded-lg border border-[#E4E4E7] text-[#71717B] hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer shrink-0"
+                className={`mt-7 ${ICON_BTN}`}
               >
                 <Trash2 className="w-4 h-4" />
               </button>
