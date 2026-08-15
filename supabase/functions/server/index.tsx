@@ -41,7 +41,11 @@ app.use(
   cors({
     origin: "*",
     allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    // PATCH is here for /quotes/:id/status. A status change is a partial
+    // update, and PATCH is not a CORS-safelisted method, so leaving it out of
+    // this list makes the browser fail the preflight and the route becomes
+    // unreachable from the app however correct the handler is.
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
   }),
@@ -684,7 +688,12 @@ app.delete("/make-server-3c030652/invoices/:id", requireAuth, async (c) => {
 // for the person filling in the form. Only the write moved to the database.
 // ===========================================================================
 
-const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "expired"];
+// What a status can be STORED as. "expired" is deliberately absent: the
+// 20260816 migration dropped it from quotes_status_check, so it is a displayed
+// value derived from valid_until. Accepting it here would let a save reach
+// Postgres only to be refused by the CHECK constraint, which surfaces as an
+// unexplained 500 instead of a message naming the field.
+const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined"];
 
 // Quote plus its line items in one round trip, so the list page never has to
 // fetch items per row.
@@ -1093,6 +1102,350 @@ app.get("/make-server-3c030652/quotes/next-number", requireAuth, async (c) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Quote lifecycle and invoicing.
+//
+// Both live in Postgres (20260816000000_quote_status_and_invoicing.sql), and
+// deliberately not in save_quote: clicking a status chip must not rewrite the
+// commercial content of the document, and creating an invoice has to write the
+// invoice blob and its link in one transaction or a link can end up pointing at
+// nothing. So these three handlers validate the request, call the function, and
+// translate its SQLSTATEs. They own no billing rule of their own, and they never
+// write an invoice through the kv helper.
+//
+// Registered before /quotes/:id for the same reason /quotes/next-number is.
+// ---------------------------------------------------------------------------
+
+// What a status can be SET to — the same four the save path accepts, aliased
+// rather than restated so the two lists cannot drift. "expired" is in neither:
+// it is derived from valid_until, and transition_quote_status refuses it
+// outright.
+const STORABLE_QUOTE_STATUSES = QUOTE_STATUSES;
+
+// PostgREST passes a raised SQLSTATE through as error.code — the same way
+// save_quote's failures are read above.
+const rpcErrorCode = (error: any): string => text(error?.code);
+
+// The database's message names the offending value ("unknown status invoiced",
+// "this quote has 2 invoice(s)", "only an accepted quote can be invoiced (this
+// one is draft)"). That is more use on screen than anything restated here, so
+// it is passed through; the fallback only covers a raise with no message.
+const rpcErrorMessage = (error: any, fallback: string): string =>
+  text(error?.message).trim() || fallback;
+
+// A body that is not JSON at all becomes {}, so validation answers with the
+// field that is missing instead of an opaque 500 from the parse.
+const readJsonBody = async (c: any): Promise<any> => {
+  const raw = await c.req.json().catch(() => null);
+  return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+};
+
+// quote_invoice_links, in the camelCase the client speaks.
+const rowToQuoteInvoiceLink = (raw: any) => {
+  const row = raw && typeof raw === "object" ? raw : {};
+  return {
+    id: row.id,
+    quoteId: row.quote_id,
+    userId: row.user_id,
+    invoiceKey: row.invoice_key ?? "",
+    invoiceNumber: row.invoice_number ?? "",
+    servicePeriodStart: row.service_period_start ?? "",
+    servicePeriodEnd: row.service_period_end ?? "",
+    invoiceKind: row.invoice_kind ?? "recurring",
+    includesSetupFee: Boolean(row.includes_setup_fee),
+    createdAt: row.created_at,
+  };
+};
+
+/**
+ * Change a quote's lifecycle status.
+ *
+ * Body: { to: QuoteStatus, expectedStatus?: QuoteStatus }
+ *
+ * expectedStatus is optimistic concurrency: the caller says what the status was
+ * when it drew the screen, and the function refuses the move if it has changed
+ * since. Omitting it means "whatever it is now".
+ */
+app.patch("/make-server-3c030652/quotes/:id/status", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+
+    if (!UUID_RE.test(id)) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    const body = await readJsonBody(c);
+    const to = text(body.to).trim();
+
+    // "expired" is the one wrong value a caller is likely to send by accident,
+    // because it is what the chip on screen says. Answering with the reason is
+    // worth more than listing the alternatives.
+    if (to === "expired") {
+      return c.json(
+        {
+          error:
+            "Expired is derived from the valid-until date, not set directly. Change the date instead.",
+        },
+        400,
+      );
+    }
+    // Checked here as well as in the function, not only for the message: an
+    // absent `to` reaches plpgsql as NULL, `NULL NOT IN (...)` evaluates to
+    // NULL, and IF treats that as false — so the function's own guard would let
+    // it through and the UPDATE would fail on the NOT NULL column as an
+    // unexplained 500.
+    if (!STORABLE_QUOTE_STATUSES.includes(to)) {
+      return c.json(
+        {
+          error: `Status "${to}" cannot be set. Use one of: ${STORABLE_QUOTE_STATUSES.join(", ")}.`,
+        },
+        400,
+      );
+    }
+
+    const rawExpected = body.expectedStatus;
+    const expected =
+      rawExpected === undefined || rawExpected === null || rawExpected === ""
+        ? null
+        : text(rawExpected).trim();
+    // Sending the displayed status here ("expired") would never match a stored
+    // one, and the caller would get a "changed elsewhere" conflict describing a
+    // race that never happened. Name the real problem instead.
+    if (expected !== null && !STORABLE_QUOTE_STATUSES.includes(expected)) {
+      return c.json(
+        {
+          error: `Expected status "${expected}" is not a stored status. Send the quote's stored status, not its displayed one.`,
+        },
+        400,
+      );
+    }
+
+    const { data, error } = await supabase.rpc("transition_quote_status", {
+      p_user_id: userId,
+      p_quote_id: id,
+      p_to: to,
+      p_expected: expected,
+      p_email: c.get("userEmail") ?? null,
+    });
+
+    if (error || !data) {
+      const code = rpcErrorCode(error);
+      if (code === "22023") {
+        return c.json(
+          { error: rpcErrorMessage(error, `Status "${to}" cannot be set.`) },
+          400,
+        );
+      }
+      if (code === "P0002") {
+        return c.json({ error: "Quote not found" }, 404);
+      }
+      if (code === "40001") {
+        return c.json(
+          { error: "This quote was changed elsewhere. Reload and try again." },
+          409,
+        );
+      }
+      if (code === "23514") {
+        return c.json(
+          {
+            error: rpcErrorMessage(
+              error,
+              "This quote has already been invoiced; create a revision instead of changing its status.",
+            ),
+          },
+          409,
+        );
+      }
+      console.error(
+        "Error changing quote status:",
+        error?.message ?? error ?? "transition_quote_status returned no row",
+      );
+      return c.json({ error: "Failed to change quote status" }, 500);
+    }
+
+    // The function returns the quote row alone — it never touches line items,
+    // so it does not carry them, and rowToQuote would report lineItems: [] to a
+    // caller that is displaying the document. Read it back the way every other
+    // read path does, keeping the function's own effective_status so expiry
+    // stays the database's computation rather than this file's twin of it.
+    const { data: full, error: readError } = await supabase
+      .from("quotes")
+      .select(QUOTE_SELECT)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (readError || !full) {
+      // The status did change; only the re-read failed. Reporting a completed
+      // write as an error would have the client show the old chip and retry.
+      if (readError) {
+        console.error("Error re-reading quote after status change:", readError);
+      }
+      return c.json({ quote: rowToQuote(data) });
+    }
+
+    return c.json({
+      quote: rowToQuote({ ...full, effective_status: (data as any).effective_status }),
+    });
+  } catch (error) {
+    console.error("Error changing quote status:", error);
+    return c.json({ error: "Failed to change quote status" }, 500);
+  }
+});
+
+/**
+ * Invoice one service period of an accepted quote.
+ *
+ * Body: { servicePeriodStart: "YYYY-MM-DD", issueDate?, dueDate?, taxPercent?,
+ *         notes? }
+ *
+ * The first invoice for a quote carries the one-time setup fee as its own line;
+ * later ones are the monthly charge only. Asking twice for the same period is
+ * answered with the invoice that already exists — that is the retry-safe path,
+ * not a failure, so it is a 200 and the caller can treat it as success.
+ */
+app.post("/make-server-3c030652/quotes/:id/invoices", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+
+    if (!UUID_RE.test(id)) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    const body = await readJsonBody(c);
+
+    // The period is the identity of the invoice: it is what the UNIQUE
+    // (quote_id, service_period_start) constraint makes un-double-billable, so
+    // it is required rather than defaulted to today's month.
+    const periodStart = text(body.servicePeriodStart).trim();
+    if (!isISODate(periodStart)) {
+      return c.json(
+        {
+          error: `Service period start "${periodStart}" is not a valid date. Use YYYY-MM-DD.`,
+        },
+        400,
+      );
+    }
+
+    // Both optional: the function derives the issue date from the period start
+    // and the due date from the issue date. An unparseable one is rejected
+    // rather than dropped, so a typo cannot silently date an invoice.
+    const issueDate = text(body.issueDate).trim();
+    if (issueDate && !isISODate(issueDate)) {
+      return c.json(
+        { error: `Issue date "${issueDate}" is not a valid date. Use YYYY-MM-DD.` },
+        400,
+      );
+    }
+    const dueDate = text(body.dueDate).trim();
+    if (dueDate && !isISODate(dueDate)) {
+      return c.json(
+        { error: `Due date "${dueDate}" is not a valid date. Use YYYY-MM-DD.` },
+        400,
+      );
+    }
+
+    const taxPercent = num(body.taxPercent);
+    if (!Number.isFinite(taxPercent) || taxPercent < 0 || taxPercent > 100) {
+      return c.json(
+        {
+          error: `Tax percent "${text(body.taxPercent)}" must be a number between 0 and 100.`,
+        },
+        400,
+      );
+    }
+
+    const notes =
+      body.notes === undefined || body.notes === null ? null : text(body.notes);
+
+    const { data, error } = await supabase.rpc("create_invoice_from_quote", {
+      p_user_id: userId,
+      p_quote_id: id,
+      p_period_start: periodStart,
+      p_issue_date: issueDate || null,
+      p_due_date: dueDate || null,
+      p_tax_percent: taxPercent,
+      p_notes: notes,
+      p_email: c.get("userEmail") ?? null,
+    });
+
+    if (error || !data) {
+      const code = rpcErrorCode(error);
+      if (code === "P0002") {
+        return c.json({ error: "Quote not found" }, 404);
+      }
+      if (code === "23514") {
+        return c.json(
+          {
+            error: rpcErrorMessage(
+              error,
+              "Only an accepted quote can be invoiced.",
+            ),
+          },
+          409,
+        );
+      }
+      console.error(
+        "Error creating invoice from quote:",
+        error?.message ?? error ?? "create_invoice_from_quote returned no row",
+      );
+      return c.json({ error: "Failed to create invoice from quote" }, 500);
+    }
+
+    if ((data as any).alreadyExists) {
+      return c.json({
+        alreadyExists: true,
+        link: rowToQuoteInvoiceLink((data as any).link),
+      });
+    }
+
+    // The invoice blob is built and stored by the function, already in the
+    // camelCase shape the invoice routes above return; passing it through
+    // unchanged is what keeps it equal to the stored record to the cent.
+    return c.json({ invoice: (data as any).invoice }, 201);
+  } catch (error) {
+    console.error("Error creating invoice from quote:", error);
+    return c.json({ error: "Failed to create invoice from quote" }, 500);
+  }
+});
+
+/**
+ * Every invoice raised from this quote, oldest service period first.
+ *
+ * This client holds the service-role key, so RLS is not what scopes the read:
+ * the user_id filter is, exactly as it is on every other quote query here. A
+ * quote belonging to someone else simply has no rows the caller can see.
+ */
+app.get("/make-server-3c030652/quotes/:id/invoices", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+
+    if (!UUID_RE.test(id)) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    const { data, error } = await supabase
+      .from("quote_invoice_links")
+      .select("*")
+      .eq("quote_id", id)
+      .eq("user_id", userId)
+      .order("service_period_start", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching invoices for quote:", error);
+      return c.json({ error: "Failed to fetch invoices for this quote" }, 500);
+    }
+
+    return c.json({ links: (data || []).map(rowToQuoteInvoiceLink) });
+  } catch (error) {
+    console.error("Error fetching invoices for quote:", error);
+    return c.json({ error: "Failed to fetch invoices for this quote" }, 500);
+  }
+});
+
 app.get("/make-server-3c030652/quotes", requireAuth, async (c) => {
   try {
     const userId = c.get("userId");
@@ -1249,6 +1602,20 @@ app.delete("/make-server-3c030652/quotes/:id", requireAuth, async (c) => {
       .select("id");
 
     if (error) {
+      // quote_invoice_links.quote_id is ON DELETE RESTRICT (20260816 migration),
+      // so deleting an invoiced quote raises foreign_key_violation. That is a
+      // rule, not a fault — the invoices would be left describing a document
+      // that no longer exists — and without this branch the person clicking
+      // Delete is told only "Failed to delete quote" with a 500.
+      if (rpcErrorCode(error) === "23503") {
+        return c.json(
+          {
+            error:
+              "This quote has invoices raised against it and can no longer be deleted.",
+          },
+          409,
+        );
+      }
       console.error("Error deleting quote:", error);
       return c.json({ error: "Failed to delete quote" }, 500);
     }

@@ -11,20 +11,43 @@
  *   05 acceptance
  */
 
-export type QuoteStatus =
-  | "draft"
-  | "sent"
-  | "accepted"
-  | "declined"
-  | "expired";
+/**
+ * What can be STORED. `expired` is deliberately absent: it is derived from
+ * validUntil by quote_effective_status(), so offering it as a choice let a user
+ * persist a value the system computes — after which extending the date would
+ * not clear it. One source of truth, and it is the date.
+ */
+export type QuoteStatus = "draft" | "sent" | "accepted" | "declined";
 
 export const QUOTE_STATUSES: QuoteStatus[] = [
   "draft",
   "sent",
   "accepted",
   "declined",
-  "expired",
 ];
+
+/** What can be DISPLAYED — the stored status, or `expired` once the date lapses. */
+export type EffectiveQuoteStatus = QuoteStatus | "expired";
+
+/**
+ * Which transitions the UI should offer. The server enforces this too
+ * (transition_quote_status); this list only keeps the UI from proposing a move
+ * the server will reject.
+ */
+export const ALLOWED_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
+  draft: ["sent", "accepted", "declined"],
+  sent: ["accepted", "declined", "draft"],
+  accepted: [],
+  declined: [],
+};
+
+/** Moves worth a confirmation prompt, with the reason to show. */
+export const TRANSITION_WARNINGS: Partial<Record<string, string>> = {
+  "draft>accepted":
+    "This quote has not been marked as sent. Only do this if the client accepted it outside the app.",
+  "sent>draft":
+    "Moving this back to draft does not recall the PDF the client already has.",
+};
 
 /** One row of Section 01. `amount` is derived, never stored client-side. */
 export interface QuoteLineItem {
@@ -67,7 +90,7 @@ export interface Quote {
    * with the server around midnight in any non-UTC timezone. Absent on an
    * unsaved draft, where the stored status is the only truth there is.
    */
-  effectiveStatus?: QuoteStatus;
+  effectiveStatus?: EffectiveQuoteStatus;
 
   // Issued to
   clientName: string;
