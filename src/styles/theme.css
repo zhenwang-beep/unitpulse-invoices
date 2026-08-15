@@ -78,7 +78,72 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+/* ---------------------------------------------------------------------------
+   UnitPulse vNext design system — semantic tokens (design.md §2.2, §3, §5).
+   Primitives resolve to semantics; components bind to semantics only.
+   Declared here so new code can bind to a token instead of a hex literal.
+   --------------------------------------------------------------------------- */
+:root {
+  /* Typography — §3. Two families, two jobs. */
+  --font-sans: Manrope, Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: Newsreader, Georgia, 'Times New Roman', serif;
+
+  /* Surfaces */
+  --surface-default: #ffffff;
+  --surface-canvas: #fafafa;
+  --surface-subtle: #f4f4f5;
+  --surface-accent: #006045;
+  --surface-accent-strong: #004f3b;
+  --surface-accent-soft: #e8f4f0;
+  --surface-danger-soft: #fff0ef;
+
+  /* Text */
+  --text-primary: #18181b;
+  --text-secondary: #52525c;
+  --text-muted: #71717b;
+  --text-disabled: #9f9fa9;
+  --text-accent: #006045;
+  --text-danger: #c0392f;
+  --text-on-accent: #ffffff;
+
+  /* Borders — §8. Only --border-control may be a control's sole boundary
+     (3.42:1, satisfies WCAG 1.4.11); the rest are decorative. */
+  --border-default: #e4e4e7;
+  --border-subtle: #ececee;
+  --border-muted: #d4d4d8;
+  --border-control: #8a8a94;
+  --border-accent: #006045;
+  --border-danger: #d84b4b;
+
+  /* State — §2.2. hover and selected must never resolve to the same value. */
+  --state-hover: #fafafa;
+  --state-selected: #f4f4f5;
+  --state-selected-hover: #ececee;
+  --state-pressed: #e4e4e7;
+
+  /* Elevation — §6.1. Reserved for surfaces that float OVER content. */
+  --shadow-popover: 0 10px 28px -6px rgba(0, 0, 0, 0.14);
+  --shadow-modal: 0 24px 56px -12px rgba(0, 0, 0, 0.2);
+  --shadow-focus: 0 0 0 2px rgba(0, 96, 69, 0.25);
+}
+
 @theme inline {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-accent: var(--surface-accent);
+  --color-surface-accent-strong: var(--surface-accent-strong);
+  --color-surface-accent-soft: var(--surface-accent-soft);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-accent: var(--text-accent);
+  --color-border-default: var(--border-default);
+  --color-border-control: var(--border-control);
+  --color-state-hover: var(--state-hover);
+  --color-state-selected: var(--state-selected);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -126,6 +191,14 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+
+  /* §3.1 — "Numbers are tabular. Any numeral in a column, KPI or comparison
+     uses font-variant-numeric: tabular-nums. Non-negotiable." */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 
   /**

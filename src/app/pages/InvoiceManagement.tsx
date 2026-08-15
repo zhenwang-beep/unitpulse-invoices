@@ -255,7 +255,7 @@ export default function InvoiceManagement() {
     val >= 1000 ? `$${(val / 1000).toFixed(1)}k` : `$${val.toFixed(2)}`;
 
   return (
-    <div className="min-h-screen bg-[#FCF9F8]">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Toaster position="top-center" />
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -263,16 +263,16 @@ export default function InvoiceManagement() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "Manrope, sans-serif" }}>
+            <h1 className="text-2xl sm:text-3xl" style={{ fontFamily: "Newsreader, Georgia, serif", fontWeight: 500 }}>
               Invoices
             </h1>
-            <p className="text-[#6B6B6B] mt-1 text-sm sm:text-base" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#71717B] mt-1 text-sm sm:text-base" style={{ fontFamily: "Manrope, sans-serif" }}>
               Overview of your invoicing activity
             </p>
           </div>
           <button
             onClick={() => navigate("/new")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer text-sm"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer text-sm"
             style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
           >
             <Plus className="w-4 h-4" />
@@ -289,10 +289,10 @@ export default function InvoiceManagement() {
               onClick={() => setTimeWindow(w)}
               className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer whitespace-nowrap flex-shrink-0 ${
                 timeWindow === w
-                  ? "bg-[#1A1A1A] text-white"
-                  : "bg-white border border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5]"
+                  ? "bg-[#18181B] text-white"
+                  : "bg-white border border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA]"
               }`}
-              style={{ fontFamily: "Inter, sans-serif" }}
+              style={{ fontFamily: "Manrope, sans-serif" }}
             >
               {TIME_WINDOW_LABELS[w]}
             </button>
@@ -301,70 +301,70 @@ export default function InvoiceManagement() {
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl border border-[#E0E0E0] p-5">
+          <div className="bg-white rounded-xl border border-[#E4E4E7] p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Total Value
               </span>
-              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-[#4A5D23]" />
+              <div className="w-8 h-8 bg-[#E8F4F0] rounded-lg flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-[#006045]" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
+            <p className="text-2xl font-bold text-[#18181B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               {formatCurrency(totalValue)}
             </p>
-            <p className="text-xs text-[#6B6B6B] mt-1" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-xs text-[#71717B] mt-1" style={{ fontFamily: "Manrope, sans-serif" }}>
               {TIME_WINDOW_LABELS[timeWindow]}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border border-[#E0E0E0] p-5">
+          <div className="bg-white rounded-xl border border-[#E4E4E7] p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Invoices
               </span>
-              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
-                <Receipt className="w-4 h-4 text-[#4A5D23]" />
+              <div className="w-8 h-8 bg-[#E8F4F0] rounded-lg flex items-center justify-center">
+                <Receipt className="w-4 h-4 text-[#006045]" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
+            <p className="text-2xl font-bold text-[#18181B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               {invoiceCount}
             </p>
-            <p className="text-xs text-[#6B6B6B] mt-1" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-xs text-[#71717B] mt-1" style={{ fontFamily: "Manrope, sans-serif" }}>
               Avg {formatCurrency(avgValue)} each
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border border-[#E0E0E0] p-5">
+          <div className="bg-white rounded-xl border border-[#E4E4E7] p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 This Month
               </span>
-              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-[#4A5D23]" />
+              <div className="w-8 h-8 bg-[#E8F4F0] rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-[#006045]" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
+            <p className="text-2xl font-bold text-[#18181B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               {formatCurrency(thisMonthValue)}
             </p>
-            <p className="text-xs text-[#6B6B6B] mt-1" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-xs text-[#71717B] mt-1" style={{ fontFamily: "Manrope, sans-serif" }}>
               This week: {formatCurrency(thisWeekValue)}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border border-[#E0E0E0] p-5">
+          <div className="bg-white rounded-xl border border-[#E4E4E7] p-5">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#6B6B6B]" style={{ fontFamily: "Manrope, sans-serif" }}>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Clients
               </span>
-              <div className="w-8 h-8 bg-[#F5F7EE] rounded-lg flex items-center justify-center">
-                <Users className="w-4 h-4 text-[#4A5D23]" />
+              <div className="w-8 h-8 bg-[#E8F4F0] rounded-lg flex items-center justify-center">
+                <Users className="w-4 h-4 text-[#006045]" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-[#1A1A1A]" style={{ fontFamily: "Manrope, sans-serif" }}>
+            <p className="text-2xl font-bold text-[#18181B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               {clientBreakdown.length}
             </p>
-            <p className="text-xs text-[#6B6B6B] mt-1" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-xs text-[#71717B] mt-1" style={{ fontFamily: "Manrope, sans-serif" }}>
               Active this period
             </p>
           </div>
@@ -372,8 +372,8 @@ export default function InvoiceManagement() {
 
         {/* Client Breakdown */}
         {clientBreakdown.length > 0 && (
-          <div className="bg-white rounded-xl border border-[#E0E0E0] p-5 mb-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#6B6B6B] mb-4" style={{ fontFamily: "Manrope, sans-serif" }}>
+          <div className="bg-white rounded-xl border border-[#E4E4E7] p-5 mb-8">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-[#71717B] mb-4" style={{ fontFamily: "Manrope, sans-serif" }}>
               Value by Client
             </h2>
             <div className="space-y-3">
@@ -382,21 +382,21 @@ export default function InvoiceManagement() {
                 return (
                   <div key={client}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-[#1A1A1A]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <span className="text-sm text-[#18181B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                         {client}
                       </span>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-semibold text-[#1A1A1A]" style={{ fontFamily: "Inter, sans-serif" }}>
+                        <span className="text-sm font-semibold text-[#18181B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                           {formatCurrency(value)}
                         </span>
-                        <span className="text-xs text-[#6B6B6B] w-10 text-right" style={{ fontFamily: "Inter, sans-serif" }}>
+                        <span className="text-xs text-[#71717B] w-10 text-right" style={{ fontFamily: "Manrope, sans-serif" }}>
                           {pct.toFixed(0)}%
                         </span>
                       </div>
                     </div>
-                    <div className="h-1.5 bg-[#F0F0F0] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#ECECEE] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-[#4A5D23] rounded-full transition-all duration-500"
+                        className="h-full bg-[#006045] rounded-full transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -408,18 +408,18 @@ export default function InvoiceManagement() {
         )}
 
         {/* Search, Filter, Invoice List */}
-        <div className="bg-white rounded-xl border border-[#E0E0E0] overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#E4E4E7] overflow-hidden">
           {/* List Header */}
-          <div className="px-6 py-4 border-b border-[#E0E0E0] flex items-center gap-4">
+          <div className="px-6 py-4 border-b border-[#E4E4E7] flex items-center gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B6B6B]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#71717B]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by invoice ID or client name..."
-                className="w-full pl-10 pr-4 py-2 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent text-sm"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full pl-10 pr-4 py-2 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent text-sm"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
 
@@ -428,28 +428,28 @@ export default function InvoiceManagement() {
                 onClick={() => setShowClientFilter(!showClientFilter)}
                 className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors cursor-pointer ${
                   selectedClient !== "all"
-                    ? "bg-[#4A5D23] text-white border-[#4A5D23]"
-                    : "bg-white border-[#E0E0E0] text-[#6B6B6B] hover:bg-[#F5F5F5]"
+                    ? "bg-[#006045] text-white border-[#006045]"
+                    : "bg-white border-[#E4E4E7] text-[#71717B] hover:bg-[#FAFAFA]"
                 }`}
-                style={{ fontFamily: "Inter, sans-serif" }}
+                style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 <Filter className="w-4 h-4" />
                 {selectedClient === "all" ? "All Clients" : selectedClient}
               </button>
               {showClientFilter && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-[#E0E0E0] z-10 max-h-64 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-[#E4E4E7] z-10 max-h-64 overflow-y-auto">
                   <div className="p-1">
                     <button
                       onClick={() => { setSelectedClient("all"); setShowClientFilter(false); }}
-                      className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === "all" ? "bg-[#F5F7EE] text-[#4A5D23]" : "hover:bg-[#F5F5F5]"}`}
-                      style={{ fontFamily: "Inter, sans-serif" }}
+                      className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === "all" ? "bg-[#E8F4F0] text-[#006045]" : "hover:bg-[#FAFAFA]"}`}
+                      style={{ fontFamily: "Manrope, sans-serif" }}
                     >All Clients</button>
                     {getUniqueClients().map((client) => (
                       <button
                         key={client}
                         onClick={() => { setSelectedClient(client); setShowClientFilter(false); }}
-                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === client ? "bg-[#F5F7EE] text-[#4A5D23]" : "hover:bg-[#F5F5F5]"}`}
-                        style={{ fontFamily: "Inter, sans-serif" }}
+                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${selectedClient === client ? "bg-[#E8F4F0] text-[#006045]" : "hover:bg-[#FAFAFA]"}`}
+                        style={{ fontFamily: "Manrope, sans-serif" }}
                       >{client}</button>
                     ))}
                   </div>
@@ -460,7 +460,7 @@ export default function InvoiceManagement() {
             {(searchQuery || selectedClient !== "all") && (
               <button
                 onClick={() => { setSearchQuery(""); setSelectedClient("all"); }}
-                className="p-2 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                className="p-2 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -470,29 +470,29 @@ export default function InvoiceManagement() {
           {/* Table */}
           {loading ? (
             <div className="text-center py-16">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A5D23]" />
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#006045]" />
             </div>
           ) : invoices.length === 0 ? (
             <div className="py-16 text-center">
-              <FileText className="w-12 h-12 text-[#D0D0D0] mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-[#1A1A1A] mb-1" style={{ fontFamily: "Manrope, sans-serif" }}>No invoices yet</h3>
-              <p className="text-sm text-[#6B6B6B] mb-4" style={{ fontFamily: "Inter, sans-serif" }}>Create your first invoice to see it here</p>
+              <FileText className="w-12 h-12 text-[#D4D4D8] mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-[#18181B] mb-1" style={{ fontFamily: "Manrope, sans-serif" }}>No invoices yet</h3>
+              <p className="text-sm text-[#71717B] mb-4" style={{ fontFamily: "Manrope, sans-serif" }}>Create your first invoice to see it here</p>
               <button
                 onClick={() => navigate("/new")}
-                className="bg-[#4A5D23] text-white px-5 py-2 rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer text-sm"
-                style={{ fontFamily: "Inter, sans-serif", fontWeight: 500 }}
+                className="bg-[#006045] text-white px-5 py-2 rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer text-sm"
+                style={{ fontFamily: "Manrope, sans-serif", fontWeight: 500 }}
               >Create Invoice</button>
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="py-16 text-center">
-              <Search className="w-12 h-12 text-[#D0D0D0] mx-auto mb-3" />
-              <h3 className="text-base font-semibold text-[#1A1A1A] mb-1" style={{ fontFamily: "Manrope, sans-serif" }}>No matching invoices</h3>
-              <p className="text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>Try adjusting your search or filter</p>
+              <Search className="w-12 h-12 text-[#D4D4D8] mx-auto mb-3" />
+              <h3 className="text-base font-semibold text-[#18181B] mb-1" style={{ fontFamily: "Manrope, sans-serif" }}>No matching invoices</h3>
+              <p className="text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>Try adjusting your search or filter</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-black text-white">
+                <thead className="bg-[#F4F4F5] text-[#71717B] border-b border-[#E4E4E7]">
                   <tr>
                     {["Invoice ID", "Client", "Issue Date", "Due Date", "Created By", "Total", "Actions"].map((h, i) => (
                       <th
@@ -508,24 +508,24 @@ export default function InvoiceManagement() {
                     <tr
                       key={invoice.id}
                       onClick={() => editInvoice(invoice)}
-                      className={`cursor-pointer hover:bg-[#F5F7EE] transition-colors ${index % 2 === 0 ? "bg-white" : "bg-[#FAFAFA]"}`}
+                      className={`cursor-pointer hover:bg-[#E8F4F0] transition-colors ${index % 2 === 0 ? "bg-white" : "bg-[#FAFAFA]"}`}
                     >
-                      <td className="px-6 py-4 font-medium text-sm" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.invoiceId}</td>
-                      <td className="px-6 py-4 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.clientName || "—"}</td>
-                      <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.issueDate || "—"}</td>
-                      <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{invoice.dueDate || "—"}</td>
-                      <td className="px-6 py-4 text-sm" style={{ fontFamily: "Inter, sans-serif" }}>
-                        <div className="text-[#1A1A1A] text-xs truncate max-w-[140px]">{invoice.createdByEmail || "—"}</div>
-                        <div className="text-xs text-[#6B6B6B] mt-0.5">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "—"}</div>
+                      <td className="px-6 py-4 font-medium text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.invoiceId}</td>
+                      <td className="px-6 py-4 text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.clientName || "—"}</td>
+                      <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.issueDate || "—"}</td>
+                      <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.dueDate || "—"}</td>
+                      <td className="px-6 py-4 text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>
+                        <div className="text-[#18181B] text-xs truncate max-w-[140px]">{invoice.createdByEmail || "—"}</div>
+                        <div className="text-xs text-[#71717B] mt-0.5">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "—"}</div>
                       </td>
-                      <td className="px-6 py-4 text-right font-semibold text-sm text-[#4A5D23]" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <td className="px-6 py-4 text-right font-semibold text-sm text-[#006045]" style={{ fontFamily: "Manrope, sans-serif" }}>
                         ${invoice.total?.toFixed(2) || "0.00"}
                       </td>
                       <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => editInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
-                          <button onClick={() => downloadInvoice(invoice)} className="p-2 text-[#6B6B6B] hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Download"><Download className="w-4 h-4" /></button>
-                          <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(invoice.id); }} className="p-2 text-[#6B6B6B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => editInvoice(invoice)} className="p-2 text-[#71717B] hover:text-[#006045] hover:bg-[#E8F4F0] rounded transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
+                          <button onClick={() => downloadInvoice(invoice)} className="p-2 text-[#71717B] hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Download"><Download className="w-4 h-4" /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(invoice.id); }} className="p-2 text-[#71717B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -548,15 +548,15 @@ export default function InvoiceManagement() {
               Delete Invoice
             </h2>
             <p
-              className="text-[#6B6B6B] text-sm mb-6"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className="text-[#71717B] text-sm mb-6"
+              style={{ fontFamily: "Manrope, sans-serif" }}
             >
               Are you sure you want to delete this invoice? This action cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                className="flex-1 px-4 py-2.5 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer"
                 style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
               >
                 Cancel

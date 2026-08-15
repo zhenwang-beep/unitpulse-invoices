@@ -127,7 +127,7 @@ export default function ClientManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FCF9F8]">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Toaster position="top-center" />
       <Navbar />
 
@@ -137,18 +137,18 @@ export default function ClientManagement() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1
-                className="text-3xl font-bold mb-1"
-                style={{ fontFamily: "Manrope, sans-serif" }}
+                className="text-3xl mb-1"
+                style={{ fontFamily: "Newsreader, Georgia, serif", fontWeight: 500 }}
               >
                 Clients
               </h1>
-              <p className="text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <p className="text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 View, search, and manage all your saved clients
               </p>
             </div>
             <button
               onClick={() => { setNewClient(emptyClient); setShowAddModal(true); }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-4 h-4" />
@@ -160,27 +160,27 @@ export default function ClientManagement() {
           {/* Search Bar */}
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, address, or city..."
-                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full pl-11 pr-4 py-3 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="p-3 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                className="p-3 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             )}
           </div>
           {searchQuery && (
-            <p className="mt-3 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="mt-3 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               Showing {filteredClients.length} of {clients.length} clients
             </p>
           )}
@@ -189,20 +189,20 @@ export default function ClientManagement() {
         {/* Content */}
         {loading ? (
           <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A5D23]" />
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#006045]" />
           </div>
         ) : clients.length === 0 ? (
-          <div className="bg-white rounded-lg border border-[#E0E0E0] p-12 text-center">
-            <Users className="w-16 h-16 text-[#D0D0D0] mx-auto mb-4" />
+          <div className="bg-white rounded-lg border border-[#E4E4E7] p-12 text-center">
+            <Users className="w-16 h-16 text-[#D4D4D8] mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
               No clients yet
             </h3>
-            <p className="text-[#6B6B6B] mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#71717B] mb-6" style={{ fontFamily: "Manrope, sans-serif" }}>
               Add your first client to get started
             </p>
             <button
               onClick={() => { setNewClient(emptyClient); setShowAddModal(true); }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-5 h-5" />
@@ -210,20 +210,20 @@ export default function ClientManagement() {
             </button>
           </div>
         ) : filteredClients.length === 0 ? (
-          <div className="bg-white rounded-lg border border-[#E0E0E0] p-12 text-center">
-            <Search className="w-16 h-16 text-[#D0D0D0] mx-auto mb-4" />
+          <div className="bg-white rounded-lg border border-[#E4E4E7] p-12 text-center">
+            <Search className="w-16 h-16 text-[#D4D4D8] mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
               No matching clients
             </h3>
-            <p className="text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               Try adjusting your search criteria
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-[#E0E0E0] overflow-hidden">
+          <div className="bg-white rounded-lg border border-[#E4E4E7] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-black text-white">
+                <thead className="bg-[#F4F4F5] text-[#71717B] border-b border-[#E4E4E7]">
                   <tr>
                     {["Client Name", "Address", "City", "State", "Zip", "Actions"].map((h, i) => (
                       <th
@@ -247,17 +247,17 @@ export default function ClientManagement() {
                                 type="text"
                                 value={editingClient[field] as string}
                                 onChange={(e) => setEditingClient({ ...editingClient, [field]: e.target.value })}
-                                className="w-full px-3 py-1.5 border border-[#E0E0E0] rounded focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                                style={{ fontFamily: "Inter, sans-serif" }}
+                                className="w-full px-3 py-1.5 border border-[#E4E4E7] rounded focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                                style={{ fontFamily: "Manrope, sans-serif" }}
                               />
                             </td>
                           ))}
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => saveClient(editingClient)} className="p-2 text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Save">
+                              <button onClick={() => saveClient(editingClient)} className="p-2 text-[#006045] hover:bg-[#E8F4F0] rounded transition-colors cursor-pointer" title="Save">
                                 <Check className="w-4 h-4" />
                               </button>
-                              <button onClick={() => setEditingClient(null)} className="p-2 text-[#6B6B6B] hover:bg-[#F5F5F5] rounded transition-colors cursor-pointer" title="Cancel">
+                              <button onClick={() => setEditingClient(null)} className="p-2 text-[#71717B] hover:bg-[#FAFAFA] rounded transition-colors cursor-pointer" title="Cancel">
                                 <X className="w-4 h-4" />
                               </button>
                             </div>
@@ -265,17 +265,17 @@ export default function ClientManagement() {
                         </>
                       ) : (
                         <>
-                          <td className="px-6 py-4 font-medium text-sm" style={{ fontFamily: "Inter, sans-serif" }}>{client.clientName}</td>
-                          <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{client.clientAddress || "—"}</td>
-                          <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{client.clientCity || "—"}</td>
-                          <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{client.clientState || "—"}</td>
-                          <td className="px-6 py-4 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>{client.clientZip || "—"}</td>
+                          <td className="px-6 py-4 font-medium text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>{client.clientName}</td>
+                          <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{client.clientAddress || "—"}</td>
+                          <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{client.clientCity || "—"}</td>
+                          <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{client.clientState || "—"}</td>
+                          <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{client.clientZip || "—"}</td>
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => setEditingClient({ ...client })} className="p-2 text-[#6B6B6B] hover:text-[#4A5D23] hover:bg-[#F5F7EE] rounded transition-colors cursor-pointer" title="Edit">
+                              <button onClick={() => setEditingClient({ ...client })} className="p-2 text-[#71717B] hover:text-[#006045] hover:bg-[#E8F4F0] rounded transition-colors cursor-pointer" title="Edit">
                                 <Edit className="w-4 h-4" />
                               </button>
-                              <button onClick={() => handleDeleteClient(client.id)} className="p-2 text-[#6B6B6B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete">
+                              <button onClick={() => handleDeleteClient(client.id)} className="p-2 text-[#71717B] hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Delete">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -299,13 +299,13 @@ export default function ClientManagement() {
               <h2 className="text-xl font-bold" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Add New Client
               </h2>
-              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer">
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-[#FAFAFA] rounded-lg transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>
                   Client Name *
                 </label>
                 <input
@@ -313,78 +313,78 @@ export default function ClientManagement() {
                   value={newClient.clientName}
                   onChange={(e) => setNewClient({ ...newClient, clientName: e.target.value })}
                   placeholder="e.g. Acme Corp"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                   autoFocus
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>Address</label>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>Address</label>
                 <input
                   type="text"
                   value={newClient.clientAddress}
                   onChange={(e) => setNewClient({ ...newClient, clientAddress: e.target.value })}
                   placeholder="Street address"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 />
               </div>
               <div>
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>City</label>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>City</label>
                 <input
                   type="text"
                   value={newClient.clientCity}
                   onChange={(e) => setNewClient({ ...newClient, clientCity: e.target.value })}
                   placeholder="City"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 />
               </div>
               <div>
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>State</label>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>State</label>
                 <input
                   type="text"
                   value={newClient.clientState}
                   onChange={(e) => setNewClient({ ...newClient, clientState: e.target.value })}
                   placeholder="State"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 />
               </div>
               <div>
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>Zip Code</label>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>Zip Code</label>
                 <input
                   type="text"
                   value={newClient.clientZip}
                   onChange={(e) => setNewClient({ ...newClient, clientZip: e.target.value })}
                   placeholder="Zip"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 />
               </div>
               <div>
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>Country</label>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>Country</label>
                 <input
                   type="text"
                   value={newClient.clientCountry}
                   onChange={(e) => setNewClient({ ...newClient, clientCountry: e.target.value })}
                   placeholder="Country"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer font-medium"
+                className="flex-1 px-4 py-2.5 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer font-medium"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Cancel
               </button>
               <button
                 onClick={addNewClient}
-                className="flex-1 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer font-medium"
+                className="flex-1 px-4 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer font-medium"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Add Client

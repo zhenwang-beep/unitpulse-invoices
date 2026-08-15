@@ -26,7 +26,7 @@ export default function Login() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-[#4A5D23] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#006045] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -79,22 +79,22 @@ export default function Login() {
           <h1
             className="text-4xl mb-2"
             style={{
-              fontFamily: "Manrope, sans-serif",
-              fontWeight: 700,
+              fontFamily: "Newsreader, Georgia, serif",
+              fontWeight: 500,
             }}
           >
             Welcome to UnitPulse
           </h1>
           <p
-            className="text-[#666666] text-lg"
-            style={{ fontFamily: "Inter, sans-serif" }}
+            className="text-[#52525C] text-lg"
+            style={{ fontFamily: "Manrope, sans-serif" }}
           >
             Professional invoice generator for your business
           </p>
         </div>
 
         {/* Sign In Card */}
-        <div className="bg-white border border-[#E0E0E0] rounded-xl p-8 shadow-sm">
+        <div className="bg-white border border-[#E4E4E7] rounded-xl p-8 shadow-sm">
           <h2
             className="text-xl mb-6 text-center"
             style={{
@@ -108,7 +108,7 @@ export default function Login() {
           {error && (
             <div
               className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              style={{ fontFamily: "Manrope, sans-serif" }}
             >
               {error}
             </div>
@@ -118,9 +118,9 @@ export default function Login() {
           <button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className="w-full bg-white border-2 border-[#E0E0E0] text-[#1F1F1F] py-3 px-6 rounded-lg transition-all duration-200 hover:border-[#4A5D23] hover:bg-[#F5F7EE] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 cursor-pointer"
+            className="w-full bg-white border-2 border-[#E4E4E7] text-[#18181B] py-3 px-6 rounded-lg transition-all duration-200 hover:border-[#006045] hover:bg-[#E8F4F0] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 cursor-pointer"
             style={{
-              fontFamily: "Inter, sans-serif",
+              fontFamily: "Manrope, sans-serif",
               fontWeight: 500,
             }}
           >
@@ -160,9 +160,9 @@ export default function Login() {
           {import.meta.env.DEV && (
             <>
               <div className="mt-4 flex items-center gap-3">
-                <div className="flex-1 h-px bg-[#E0E0E0]" />
+                <div className="flex-1 h-px bg-[#E4E4E7]" />
                 <span className="text-xs text-[#999] font-mono">DEV ONLY</span>
-                <div className="flex-1 h-px bg-[#E0E0E0]" />
+                <div className="flex-1 h-px bg-[#E4E4E7]" />
               </div>
               <button
                 onClick={handleDevLogin}
@@ -177,8 +177,8 @@ export default function Login() {
 
           <div className="mt-6 text-center">
             <p
-              className="text-sm text-[#666666]"
-              style={{ fontFamily: "Inter, sans-serif" }}
+              className="text-sm text-[#52525C]"
+              style={{ fontFamily: "Manrope, sans-serif" }}
             >
               By signing in, you agree to our Terms of Service
               and Privacy Policy

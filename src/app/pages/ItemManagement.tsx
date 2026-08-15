@@ -137,7 +137,7 @@ export default function ItemManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FCF9F8]">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Toaster position="top-center" />
       <Navbar />
 
@@ -147,18 +147,18 @@ export default function ItemManagement() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1
-                className="text-3xl font-bold mb-1"
-                style={{ fontFamily: "Manrope, sans-serif" }}
+                className="text-3xl mb-1"
+                style={{ fontFamily: "Newsreader, Georgia, serif", fontWeight: 500 }}
               >
                 Saved Items
               </h1>
-              <p className="text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+              <p className="text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Manage your frequently used invoice items
               </p>
             </div>
             <button
               onClick={() => { setFormData({ description: "", unitPrice: 0 }); setShowAddModal(true); }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-4 h-4" />
@@ -170,27 +170,27 @@ export default function ItemManagement() {
           {/* Search Bar */}
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#71717B]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search items by description..."
-                className="w-full pl-11 pr-4 py-3 border border-[#E0E0E0] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#4A5D23] focus:border-transparent"
-                style={{ fontFamily: "Inter, sans-serif" }}
+                className="w-full pl-11 pr-4 py-3 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
+                style={{ fontFamily: "Manrope, sans-serif" }}
               />
             </div>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="p-3 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                className="p-3 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             )}
           </div>
           {searchQuery && (
-            <p className="mt-3 text-sm text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="mt-3 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               Showing {filteredItems.length} of {items.length} items
             </p>
           )}
@@ -199,20 +199,20 @@ export default function ItemManagement() {
         {/* Content */}
         {loading ? (
           <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#4A5D23]" />
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#006045]" />
           </div>
         ) : items.length === 0 ? (
-          <div className="bg-white rounded-lg border border-[#E0E0E0] p-12 text-center">
-            <Package className="w-16 h-16 text-[#D0D0D0] mx-auto mb-4" />
+          <div className="bg-white rounded-lg border border-[#E4E4E7] p-12 text-center">
+            <Package className="w-16 h-16 text-[#D4D4D8] mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
               No saved items yet
             </h3>
-            <p className="text-[#6B6B6B] mb-6" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#71717B] mb-6" style={{ fontFamily: "Manrope, sans-serif" }}>
               Add your first item to reuse it quickly when creating invoices
             </p>
             <button
               onClick={() => { setFormData({ description: "", unitPrice: 0 }); setShowAddModal(true); }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer"
               style={{ fontFamily: "Manrope, sans-serif", fontWeight: 600 }}
             >
               <Plus className="w-5 h-5" />
@@ -220,20 +220,20 @@ export default function ItemManagement() {
             </button>
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="bg-white rounded-lg border border-[#E0E0E0] p-12 text-center">
-            <Search className="w-16 h-16 text-[#D0D0D0] mx-auto mb-4" />
+          <div className="bg-white rounded-lg border border-[#E4E4E7] p-12 text-center">
+            <Search className="w-16 h-16 text-[#D4D4D8] mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "Manrope, sans-serif" }}>
               No matching items
             </h3>
-            <p className="text-[#6B6B6B]" style={{ fontFamily: "Inter, sans-serif" }}>
+            <p className="text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>
               Try adjusting your search criteria
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-[#E0E0E0] overflow-hidden">
+          <div className="bg-white rounded-lg border border-[#E4E4E7] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-black text-white">
+                <thead className="bg-[#F4F4F5] text-[#71717B] border-b border-[#E4E4E7]">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ fontFamily: "Manrope, sans-serif" }}>
                       Description
@@ -249,32 +249,32 @@ export default function ItemManagement() {
                 <tbody>
                   {filteredItems.map((item, index) => (
                     <tr key={item.id} className={index % 2 === 0 ? "bg-white" : "bg-[#FAFAFA]"}>
-                      <td className="px-6 py-4" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <td className="px-6 py-4" style={{ fontFamily: "Manrope, sans-serif" }}>
                         {editingItem?.id === item.id ? (
                           <input
                             type="text"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full px-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                            style={{ fontFamily: "Inter, sans-serif" }}
+                            className="w-full px-3 py-2 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                            style={{ fontFamily: "Manrope, sans-serif" }}
                           />
                         ) : (
                           <span className="font-medium">{item.description}</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <td className="px-6 py-4 text-right" style={{ fontFamily: "Manrope, sans-serif" }}>
                         {editingItem?.id === item.id ? (
                           <div className="flex justify-end">
                             <div className="relative w-32">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6B6B]">$</span>
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#71717B]">$</span>
                               <input
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 value={formData.unitPrice}
                                 onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })}
-                                className="w-full pl-7 pr-3 py-2 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                                style={{ fontFamily: "Inter, sans-serif" }}
+                                className="w-full pl-7 pr-3 py-2 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                                style={{ fontFamily: "Manrope, sans-serif" }}
                               />
                             </div>
                           </div>
@@ -286,16 +286,16 @@ export default function ItemManagement() {
                         <div className="flex items-center justify-end gap-2">
                           {editingItem?.id === item.id ? (
                             <>
-                              <button onClick={handleUpdateItem} className="p-2 text-[#4A5D23] hover:bg-[#F5F7EE] rounded-lg transition-colors cursor-pointer" title="Save">
+                              <button onClick={handleUpdateItem} className="p-2 text-[#006045] hover:bg-[#E8F4F0] rounded-lg transition-colors cursor-pointer" title="Save">
                                 <Save className="w-4 h-4" />
                               </button>
-                              <button onClick={cancelEdit} className="p-2 text-[#6B6B6B] hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer" title="Cancel">
+                              <button onClick={cancelEdit} className="p-2 text-[#71717B] hover:bg-[#FAFAFA] rounded-lg transition-colors cursor-pointer" title="Cancel">
                                 <X className="w-4 h-4" />
                               </button>
                             </>
                           ) : (
                             <>
-                              <button onClick={() => startEdit(item)} className="p-2 text-[#6B6B6B] hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer" title="Edit">
+                              <button onClick={() => startEdit(item)} className="p-2 text-[#71717B] hover:bg-[#FAFAFA] rounded-lg transition-colors cursor-pointer" title="Edit">
                                 <Pencil className="w-4 h-4" />
                               </button>
                               <button onClick={() => handleDeleteItem(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Delete">
@@ -322,13 +322,13 @@ export default function ItemManagement() {
               <h2 className="text-xl font-bold" style={{ fontFamily: "Manrope, sans-serif" }}>
                 Add New Item
               </h2>
-              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer">
+              <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-[#FAFAFA] rounded-lg transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>
                   Description
                 </label>
                 <input
@@ -336,17 +336,17 @@ export default function ItemManagement() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="e.g. Web Development"
-                  className="w-full px-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                  style={{ fontFamily: "Inter, sans-serif" }}
+                  className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm text-[#6B6B6B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>
+                <label className="block text-sm text-[#71717B] mb-1.5" style={{ fontFamily: "Manrope, sans-serif" }}>
                   Unit Price
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B6B6B]">$</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#71717B]">$</span>
                   <input
                     type="number"
                     min="0"
@@ -354,8 +354,8 @@ export default function ItemManagement() {
                     value={formData.unitPrice || ""}
                     onChange={(e) => setFormData({ ...formData, unitPrice: parseFloat(e.target.value) || 0 })}
                     placeholder="0.00"
-                    className="w-full pl-8 pr-4 py-2.5 border border-[#E0E0E0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4A5D23]"
-                    style={{ fontFamily: "Inter, sans-serif" }}
+                    className="w-full pl-8 pr-4 py-2.5 border border-[#E4E4E7] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#006045]"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
                   />
                 </div>
               </div>
@@ -363,14 +363,14 @@ export default function ItemManagement() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 px-4 py-2.5 border border-[#E0E0E0] rounded-lg hover:bg-[#F5F5F5] transition-colors cursor-pointer font-medium"
+                className="flex-1 px-4 py-2.5 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer font-medium"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddItem}
-                className="flex-1 px-4 py-2.5 bg-[#4A5D23] text-white rounded-lg hover:bg-[#3A4A1B] transition-colors cursor-pointer font-medium"
+                className="flex-1 px-4 py-2.5 bg-[#006045] text-white rounded-lg hover:bg-[#004F3B] transition-colors cursor-pointer font-medium"
                 style={{ fontFamily: "Manrope, sans-serif" }}
               >
                 Add Item

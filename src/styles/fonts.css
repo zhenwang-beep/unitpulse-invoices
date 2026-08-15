@@ -1,2 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* design.md §3 — two families, two jobs.
+   Manrope is the UI voice (body, buttons, labels, tables, data).
+   Newsreader is the display voice (page titles only in this app).
+   Weights limited to those the spec actually uses: Manrope 500/600/700/800,
+   Newsreader 500 normal + italic. */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;1,500&display=swap');

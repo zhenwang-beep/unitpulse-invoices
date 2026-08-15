@@ -12,7 +12,7 @@ export function InvoiceGeneratorWrapper({ children }: Props) {
   return (
     <div className="min-h-screen bg-white">
       {/* Top Navigation Bar */}
-      <div className="border-b border-[#E0E0E0] bg-white px-6 py-4">
+      <div className="border-b border-[#E4E4E7] bg-white px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <h1
             className="text-xl font-bold"
@@ -23,7 +23,7 @@ export function InvoiceGeneratorWrapper({ children }: Props) {
           <button
             onClick={() => navigate("/invoices")}
             className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-[#333] transition-colors"
-            style={{ fontFamily: "Inter, sans-serif", fontWeight: 500 }}
+            style={{ fontFamily: "Manrope, sans-serif", fontWeight: 500 }}
           >
             <FileText className="w-5 h-5" />
             Manage Invoices
