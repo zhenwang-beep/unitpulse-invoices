@@ -158,7 +158,7 @@ const mergeQuoteDefaults = (stored: any) => {
 };
 
 // Get company settings
-app.get("/make-server-3c030652/company-settings", async (c) => {
+app.get("/make-server-3c030652/company-settings", requireAuth, async (c) => {
   try {
     const stored = await kv.get("company_settings");
 
@@ -187,7 +187,9 @@ app.get("/make-server-3c030652/company-settings", async (c) => {
 });
 
 // Save company settings
-app.post("/make-server-3c030652/company-settings", async (c) => {
+// requireAuth: these settings now carry quoteDefaults, the boilerplate every
+// future quote inherits. An unauthenticated write would let anyone rewrite it.
+app.post("/make-server-3c030652/company-settings", requireAuth, async (c) => {
   try {
     const body = await c.req.json();
     const { companyName, companyAddress, logoPath, companyEmail, companyPhone } = body;
@@ -811,6 +813,37 @@ const validateQuoteBody = (body: any): string | null => {
     }
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
       return `Unit price for "${label}" must be an amount of 0 or more.`;
+    }
+    // Mirror the CHECK constraints on quote_line_items. Without these the
+    // database raises and the caller sees an opaque 500 instead of being told
+    // which field is out of range.
+    if (quantity > 100000) {
+      return `Quantity for "${label}" must be 100000 or less.`;
+    }
+    if (unitPrice > 1000000) {
+      return `Unit price for "${label}" must be 1000000 or less.`;
+    }
+  }
+  if (items.length > 200) {
+    return "A quote cannot have more than 200 line items.";
+  }
+  // Prose fields are rendered directly into the document and the PDF; a null or
+  // non-object entry crashes the renderer, so the shape is checked here rather
+  // than only that the field is an array.
+  for (const group of asArray(body.scopeGroups)) {
+    if (!group || typeof group !== "object" || Array.isArray(group)) {
+      return "Each scope group must be an object.";
+    }
+    if ((group as any).bullets !== undefined && !Array.isArray((group as any).bullets)) {
+      return "Scope group bullets must be an array of strings.";
+    }
+    for (const bullet of asArray((group as any).bullets)) {
+      if (typeof bullet !== "string") return "Scope group bullets must be strings.";
+    }
+  }
+  for (const key of ["included", "excluded"] as const) {
+    for (const entry of asArray((body as any)[key])) {
+      if (typeof entry !== "string") return `Every ${key} entry must be a string.`;
     }
   }
 

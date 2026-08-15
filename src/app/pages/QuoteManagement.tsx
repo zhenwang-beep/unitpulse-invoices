@@ -133,10 +133,12 @@ export default function QuoteManagement() {
     }
   };
 
-  // A quote past its valid-until date reads as expired, but the stored status is
-  // the server's to change — this is a display derivation only.
+  // Expiry is the server's definition, not the browser's: deriving it from the
+  // local date disagreed with the API around midnight outside UTC. Fall back to
+  // a local derivation only for a quote the server has not weighed in on.
   const todayISO = toISODate(new Date());
   const displayStatus = (quote: Quote): QuoteStatus => {
+    if (quote.effectiveStatus) return quote.effectiveStatus;
     const stored = quote.status;
     const lapsed =
       !!quote.validUntil && quote.validUntil < todayISO && (stored === "draft" || stored === "sent");

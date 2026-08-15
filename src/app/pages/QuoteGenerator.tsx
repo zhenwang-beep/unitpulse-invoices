@@ -226,10 +226,22 @@ export default function QuoteGenerator() {
   const [savedId, setSavedId] = useState<string | null>(id ?? null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
-  const patch = useCallback(
-    (fields: Partial<Quote>) => setQuote((q) => ({ ...q, ...fields })),
-    [],
-  );
+  // Cleared by the first edit; see the settings loader below.
+  const pristineRef = useRef(true);
+  // Download renders current form state, so it must not be reachable while that
+  // state differs from what was saved — otherwise the PDF a client receives
+  // says something the stored quote does not.
+  const [dirty, setDirty] = useState(false);
+
+  const markDirty = useCallback(() => {
+    pristineRef.current = false;
+    setDirty(true);
+  }, []);
+
+  const patch = useCallback((fields: Partial<Quote>) => {
+    markDirty();
+    setQuote((q) => ({ ...q, ...fields }));
+  }, [markDirty]);
 
   /* ---------- load settings (and quote defaults) ---------- */
   useEffect(() => {
@@ -244,8 +256,11 @@ export default function QuoteGenerator() {
             logoUrl: data.settings.logoUrl || logoPng,
           });
         }
-        // Defaults only seed a NEW quote — never overwrite a saved one.
-        if (!isEditMode && data.settings?.quoteDefaults) {
+        // Defaults seed a NEW quote only, and only while it is still pristine.
+        // Settings arrive asynchronously; on a slow connection the response
+        // could otherwise land after the user had started typing and replace
+        // the whole draft, silently discarding their edits.
+        if (!isEditMode && data.settings?.quoteDefaults && pristineRef.current) {
           setQuote(
             createEmptyQuote({
               ...DEFAULT_QUOTE_DEFAULTS,
@@ -289,15 +304,18 @@ export default function QuoteGenerator() {
   const updateLineItem = (
     itemId: string,
     fields: Partial<QuoteLineItem>,
-  ) =>
+  ) => {
+    markDirty();
     setQuote((q) => ({
       ...q,
       lineItems: q.lineItems.map((it) =>
         it.id === itemId ? { ...it, ...fields } : it,
       ),
     }));
+  };
 
-  const addLineItem = () =>
+  const addLineItem = () => {
+    markDirty();
     setQuote((q) => ({
       ...q,
       lineItems: [
@@ -312,25 +330,31 @@ export default function QuoteGenerator() {
         },
       ],
     }));
+  };
 
-  const removeLineItem = (itemId: string) =>
+  const removeLineItem = (itemId: string) => {
+    markDirty();
     setQuote((q) => ({
       ...q,
       lineItems: q.lineItems
         .filter((it) => it.id !== itemId)
         .map((it, i) => ({ ...it, position: i })),
     }));
+  };
 
   /* ---------- scope groups ---------- */
-  const updateGroup = (gid: string, fields: Partial<ScopeGroup>) =>
+  const updateGroup = (gid: string, fields: Partial<ScopeGroup>) => {
+    markDirty();
     setQuote((q) => ({
       ...q,
       scopeGroups: q.scopeGroups.map((g) =>
         g.id === gid ? { ...g, ...fields } : g,
       ),
     }));
+  };
 
-  const addGroup = () =>
+  const addGroup = () => {
+    markDirty();
     setQuote((q) => ({
       ...q,
       scopeGroups: [
@@ -338,12 +362,15 @@ export default function QuoteGenerator() {
         { id: newId(), title: "", category: "", bullets: [""] },
       ],
     }));
+  };
 
-  const removeGroup = (gid: string) =>
+  const removeGroup = (gid: string) => {
+    markDirty();
     setQuote((q) => ({
       ...q,
       scopeGroups: q.scopeGroups.filter((g) => g.id !== gid),
     }));
+  };
 
   /* ---------- save ---------- */
   const save = async () => {
@@ -372,6 +399,7 @@ export default function QuoteGenerator() {
       }
       setSavedId(data.quote.id);
       setQuote(data.quote);
+      setDirty(false);
       toast.success(savedId ? "Quote updated" : "Quote saved");
       if (!savedId) navigate(`/quotes/${data.quote.id}`, { replace: true });
     } catch (e) {
@@ -781,10 +809,16 @@ export default function QuoteGenerator() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={downloadPDF}
-                  disabled={!savedId}
-                  title={savedId ? "Download PDF" : "Save first to download"}
+                  disabled={!savedId || dirty}
+                  title={
+                    !savedId
+                      ? "Save first to download"
+                      : dirty
+                        ? "Save your changes first — the PDF renders the saved quote"
+                        : "Download PDF"
+                  }
                   className={`px-6 py-3 rounded-lg border transition-colors ${
-                    savedId
+                    savedId && !dirty
                       ? "border-[#E4E4E7] text-[#52525C] hover:bg-white cursor-pointer"
                       : "border-gray-200 text-gray-300 cursor-not-allowed"
                   }`}
@@ -845,12 +879,12 @@ export default function QuoteGenerator() {
             <Eye className="w-5 h-5" />
           </button>
           <button
-            onClick={savedId ? downloadPDF : undefined}
-            disabled={!savedId}
+            onClick={savedId && !dirty ? downloadPDF : undefined}
+            disabled={!savedId || dirty}
             title={savedId ? "Download PDF" : "Save first to download"}
             aria-label="Download PDF"
             className={`p-2.5 rounded-lg border transition-colors ${
-              savedId
+              savedId && !dirty
                 ? "border-[#E4E4E7] text-[#71717B] hover:bg-[#F4F4F5] cursor-pointer"
                 : "border-gray-200 text-gray-300 cursor-not-allowed"
             }`}

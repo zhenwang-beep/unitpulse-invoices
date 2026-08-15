@@ -50,9 +50,10 @@ CREATE TABLE IF NOT EXISTS public.quotes (
 
   -- Section 01 — money
   currency             text NOT NULL DEFAULT 'USD',
-  subtotal             numeric(12,2) NOT NULL DEFAULT 0,
-  setup_fee            numeric(12,2) NOT NULL DEFAULT 0,
-  total_monthly        numeric(12,2) NOT NULL DEFAULT 0,
+  -- numeric(18,2): one line may reach 1e11, and a quote sums many of them.
+  subtotal             numeric(18,2) NOT NULL DEFAULT 0,
+  setup_fee            numeric(18,2) NOT NULL DEFAULT 0,
+  total_monthly        numeric(18,2) NOT NULL DEFAULT 0,
 
   -- Sections 02 & 04 — document prose
   scope_groups         jsonb NOT NULL DEFAULT '[]'::jsonb,
@@ -162,11 +163,10 @@ CREATE POLICY quote_line_items_owner_select ON public.quote_line_items
 -- with a $500 setup fee, on a document the client signs. What they actually
 -- pay up front is the first month plus the fee, so that gets its own derived
 -- column rather than being recomputed (differently) by each renderer.
--- numeric(14,2) because the sum of two numeric(12,2) values can carry an
--- eleventh integer digit.
+-- numeric(18,2) to match the aggregates it is derived from.
 -- ===========================================================================
 ALTER TABLE public.quotes
-  ADD COLUMN IF NOT EXISTS initial_amount_due numeric(14,2)
+  ADD COLUMN IF NOT EXISTS initial_amount_due numeric(18,2)
   GENERATED ALWAYS AS (total_monthly + setup_fee) STORED;
 
 -- ===========================================================================
@@ -180,7 +180,9 @@ CREATE OR REPLACE FUNCTION public.quote_effective_status(
   p_status text,
   p_valid_until date
 ) RETURNS text
-LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
+-- STABLE, not IMMUTABLE: it reads CURRENT_DATE. Declaring it immutable
+-- would let Postgres cache a result that silently goes stale at midnight.
+LANGUAGE sql STABLE PARALLEL SAFE AS $$
   SELECT CASE
     WHEN p_status IN ('draft','sent') AND p_valid_until < CURRENT_DATE THEN 'expired'
     ELSE p_status
@@ -215,10 +217,11 @@ SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_id        uuid;
-  v_subtotal  numeric(12,2);
-  v_setup_fee numeric(12,2);
+  v_subtotal  numeric(18,2);
+  v_setup_fee numeric(18,2);
   v_number    text;
   v_supplied  boolean;
+  v_allocate  boolean;
   v_year      text := to_char(CURRENT_DATE, 'YYYY');
   v_attempt   int;
   v_result    jsonb;
@@ -228,38 +231,40 @@ BEGIN
   END IF;
 
   v_setup_fee := round(COALESCE((p_quote->>'setup_fee')::numeric, 0), 2);
+  v_number    := NULLIF(btrim(COALESCE(p_quote->>'quote_number', '')), '');
+  v_supplied  := v_number IS NOT NULL;
 
-  SELECT COALESCE(SUM(round(
-           COALESCE(NULLIF(it->>'quantity','')::numeric, 0)
-         * COALESCE(NULLIF(it->>'unit_price','')::numeric, 0), 2)), 0)
-    INTO v_subtotal
-    FROM jsonb_array_elements(COALESCE(p_items, '[]'::jsonb)) AS it;
+  -- Only a NEW quote without a supplied number gets one allocated. An update
+  -- that omits the number keeps the one the client already has: renumbering a
+  -- quote that has been sent would change a client-facing identifier.
+  v_allocate := (p_quote_id IS NULL) AND NOT v_supplied;
 
-  v_number   := NULLIF(btrim(COALESCE(p_quote->>'quote_number', '')), '');
-  v_supplied := v_number IS NOT NULL;
-
-  -- On an update, the caller must own the row. Filtering on both id and
-  -- user_id means another account's quote simply matches nothing.
   IF p_quote_id IS NOT NULL THEN
-    PERFORM 1 FROM public.quotes WHERE id = p_quote_id AND user_id = p_user_id;
+    -- FOR UPDATE: without the lock a concurrent delete between this check and
+    -- the UPDATE below leaves v_id null and the line insert fails obscurely.
+    PERFORM 1 FROM public.quotes
+     WHERE id = p_quote_id AND user_id = p_user_id
+       FOR UPDATE;
     IF NOT FOUND THEN
       RAISE EXCEPTION 'quote not found' USING ERRCODE = 'P0002';
     END IF;
   END IF;
 
-  -- Browser-side random numbers collide ~42% of the time within 100 quotes,
-  -- so an unspecified number is allocated here and retried on conflict. A
-  -- number the user typed is never silently changed — that 23505 surfaces.
   FOR v_attempt IN 1..8 LOOP
     BEGIN
-      IF v_number IS NULL THEN
-        SELECT 'UP-' || v_year || '-' || lpad((COALESCE(MAX(
-                 NULLIF(regexp_replace(quote_number, '^.*-', ''), '')::int), 0)
-                 + v_attempt)::text, 4, '0')
+      IF v_allocate THEN
+        -- bigint, and no lpad truncation: a 5-digit sequence must stay 5 digits
+        -- rather than silently wrapping back to a number already in use.
+        SELECT 'UP-' || v_year || '-' || (
+                 CASE WHEN n < 10000 THEN lpad(n::text, 4, '0') ELSE n::text END)
           INTO v_number
-          FROM public.quotes
-         WHERE user_id = p_user_id
-           AND quote_number ~ ('^UP-' || v_year || '-[0-9]+$');
+          FROM (
+            SELECT COALESCE(MAX((regexp_replace(quote_number, '^.*-', ''))::bigint), 0)
+                   + v_attempt AS n
+              FROM public.quotes
+             WHERE user_id = p_user_id
+               AND quote_number ~ ('^UP-' || v_year || '-[0-9]{1,15}$')
+          ) t;
       END IF;
 
       IF p_quote_id IS NULL THEN
@@ -293,7 +298,7 @@ BEGIN
           p_quote->>'billing_cadence', p_quote->>'payment_terms',
           p_quote->>'price_change_terms', p_quote->>'quote_validity_terms',
           COALESCE(NULLIF(p_quote->>'currency',''), 'USD'),
-          v_subtotal, v_setup_fee, v_subtotal,
+          0, v_setup_fee, 0,
           COALESCE(p_quote->'scope_groups', '[]'::jsonb),
           COALESCE(p_quote->'included', '[]'::jsonb),
           COALESCE(p_quote->'excluded', '[]'::jsonb),
@@ -301,7 +306,7 @@ BEGIN
         ) RETURNING id INTO v_id;
       ELSE
         UPDATE public.quotes SET
-          quote_number         = v_number,
+          quote_number         = CASE WHEN v_supplied THEN v_number ELSE quote_number END,
           status               = COALESCE(NULLIF(p_quote->>'status',''), status),
           client_name          = COALESCE(p_quote->>'client_name',''),
           client_contact_name  = p_quote->>'client_contact_name',
@@ -325,9 +330,7 @@ BEGIN
           price_change_terms   = p_quote->>'price_change_terms',
           quote_validity_terms = p_quote->>'quote_validity_terms',
           currency             = COALESCE(NULLIF(p_quote->>'currency',''), currency),
-          subtotal             = v_subtotal,
           setup_fee            = v_setup_fee,
-          total_monthly        = v_subtotal,
           scope_groups         = COALESCE(p_quote->'scope_groups', '[]'::jsonb),
           included             = COALESCE(p_quote->'included', '[]'::jsonb),
           excluded             = COALESCE(p_quote->'excluded', '[]'::jsonb),
@@ -335,14 +338,17 @@ BEGIN
           notes                = p_quote->>'notes'
         WHERE id = p_quote_id AND user_id = p_user_id
         RETURNING id INTO v_id;
+
+        IF NOT FOUND OR v_id IS NULL THEN
+          RAISE EXCEPTION 'quote not found' USING ERRCODE = 'P0002';
+        END IF;
       END IF;
 
       EXIT;
     EXCEPTION WHEN unique_violation THEN
-      IF v_supplied OR v_attempt = 8 THEN
+      IF NOT v_allocate OR v_attempt = 8 THEN
         RAISE;
       END IF;
-      v_number := NULL;  -- allocate a fresh one and try again
     END;
   END LOOP;
 
@@ -359,7 +365,19 @@ BEGIN
     it->>'description',
     round(COALESCE(NULLIF(it->>'quantity','')::numeric, 0), 2),
     round(COALESCE(NULLIF(it->>'unit_price','')::numeric, 0), 2)
-  FROM jsonb_array_elements(COALESCE(p_items, '[]'::jsonb)) WITH ORDINALITY AS t(it, ord);
+  FROM jsonb_array_elements(COALESCE(p_items, '[]'::jsonb))
+       WITH ORDINALITY AS t(it, ord);
+
+  -- Totals are summed from the STORED rows, after rounding, so the persisted
+  -- subtotal always equals the sum of the persisted line amounts. Summing the
+  -- raw JSON instead let quantity 1.005 store as 1.01 while the subtotal was
+  -- computed from 1.005 — a quote whose total disagreed with its own lines.
+  SELECT COALESCE(SUM(amount), 0) INTO v_subtotal
+    FROM public.quote_line_items WHERE quote_id = v_id;
+
+  UPDATE public.quotes
+     SET subtotal = v_subtotal, total_monthly = v_subtotal
+   WHERE id = v_id;
 
   SELECT to_jsonb(q) || jsonb_build_object(
            'effective_status', public.quote_effective_status(q.status, q.valid_until),
@@ -374,6 +392,9 @@ BEGIN
 END;
 $$;
 
--- Only the service role may call it; the edge function is the write path.
+-- Execution is granted explicitly. Supabase project defaults vary, and relying
+-- on an implicit service_role grant makes every save a 42501 on newer projects.
 REVOKE ALL ON FUNCTION public.save_quote(uuid, text, jsonb, jsonb, uuid)
   FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.save_quote(uuid, text, jsonb, jsonb, uuid)
+  TO service_role;

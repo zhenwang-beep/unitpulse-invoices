@@ -52,6 +52,14 @@ export interface Quote {
 
   quoteNumber: string;
   status: QuoteStatus;
+  /**
+   * Server-computed. Expiry is a function of validUntil, and the database owns
+   * that definition (quote_effective_status) so the API, the list and any
+   * future report cannot drift apart — a browser deriving it locally disagrees
+   * with the server around midnight in any non-UTC timezone. Absent on an
+   * unsaved draft, where the stored status is the only truth there is.
+   */
+  effectiveStatus?: QuoteStatus;
 
   // Issued to
   clientName: string;

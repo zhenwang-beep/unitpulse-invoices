@@ -10,6 +10,7 @@ import {
   orDash,
   quoteSubtotal,
   monthlyRecurringTotal,
+  initialAmountDue,
   type Quote,
   type QuoteLineItem,
   type ScopeGroup,
@@ -271,6 +272,8 @@ export function generateQuotePDF(
   const subtotal = quoteSubtotal(items);
   const setupFee = Number(quote.setupFee) || 0;
   const totalMonthly = monthlyRecurringTotal(items);
+  const dueAtSigning = initialAmountDue(items, setupFee);
+  const hasSetupFee  = setupFee > 0;
   const companyName = companySettings?.companyName || "UnitPulse";
 
   // =======================================================================
@@ -567,7 +570,8 @@ export function generateQuotePDF(
     // lands on a page without the amounts it sums. The footnote below is
     // allowed to flow on its own; binding it here costs a whole page
     // whenever the total lands near the bottom.
-    const summaryH = 24 + 24 + 38;
+    // + one more 24pt row when a setup fee makes "due at signing" appear.
+    const summaryH = 24 + 24 + 38 + (hasSetupFee ? 24 : 0);
     if (ensureSpace(summaryH)) drawTableHeader();
 
     const summaryRow = (label: string, value: string) => {
@@ -599,7 +603,27 @@ export function generateQuotePDF(
       color: WHITE,
       align: "right",
     });
-    yPos += totalH + 14;
+    yPos += totalH;
+
+    // The preview shows this whenever a one-time fee exists; without it here the
+    // PDF and the screen state different amounts for the same quote.
+    if (hasSetupFee) {
+      addText("Due at signing (first month + setup)", colUnitX, yPos + 16, {
+        size: 9,
+        style: "bold",
+        color: TEXT_SECONDARY,
+        align: "right",
+      });
+      addText(formatMoney(dueAtSigning, currency), colAmountX, yPos + 16, {
+        size: 9.5,
+        style: "bold",
+        color: TEXT_PRIMARY,
+        align: "right",
+      });
+      yPos += 24;
+      drawLine(margin, yPos, contentRight, yPos, BORDER_HAIRLINE);
+    }
+    yPos += 14;
 
     const footnote = wrap(AMOUNTS_FOOTNOTE, contentWidth, 8);
     ensureSpace(footnote.length * 11 + 12);
