@@ -834,6 +834,12 @@ const validateQuoteBody = (body: any): string | null => {
     if (!group || typeof group !== "object" || Array.isArray(group)) {
       return "Each scope group must be an object.";
     }
+    for (const field of ["id", "title", "category"] as const) {
+      const value = (group as any)[field];
+      if (value !== undefined && value !== null && typeof value !== "string") {
+        return `Scope group ${field} must be text.`;
+      }
+    }
     if ((group as any).bullets !== undefined && !Array.isArray((group as any).bullets)) {
       return "Scope group bullets must be an array of strings.";
     }
@@ -988,6 +994,9 @@ const rowToQuote = (row: any) => ({
   // these from lineItems, but the list page should not have to.
   subtotal: Number(row.subtotal) || 0,
   totalMonthly: Number(row.total_monthly) || 0,
+  // The generated column. Without it the client recomputes "due at signing"
+  // in JS and can land a cent away from the stored figure.
+  initialAmountDue: Number(row.initial_amount_due) || 0,
 
   scopeGroups: asArray(row.scope_groups),
   included: asArray(row.included),

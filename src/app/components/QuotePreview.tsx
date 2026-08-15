@@ -2,10 +2,10 @@ import React from "react";
 import type { CompanySettings } from "../App";
 import {
   type Quote,
-  quoteSubtotal,
-  monthlyRecurringTotal,
-  initialAmountDue,
-  lineAmount,
+  displaySubtotal,
+  displayMonthly,
+  displayDueAtSigning,
+  displayLineAmount,
   formatMoney,
   orDash,
   formatQuoteDate,
@@ -127,9 +127,10 @@ interface QuotePreviewProps {
 
 export const QuotePreview = React.forwardRef<HTMLDivElement, QuotePreviewProps>(
   ({ quote, companySettings }, ref) => {
-    const subtotal = quoteSubtotal(quote.lineItems);
-    const monthly = monthlyRecurringTotal(quote.lineItems);
-    const dueAtSigning = initialAmountDue(quote.lineItems, quote.setupFee);
+    // Stored figures win once the quote is saved — see QuoteLineItem.amount.
+    const subtotal = displaySubtotal(quote);
+    const monthly = displayMonthly(quote);
+    const dueAtSigning = displayDueAtSigning(quote);
     const hasSetupFee = (Number(quote.setupFee) || 0) > 0;
 
     return (
@@ -364,7 +365,7 @@ export const QuotePreview = React.forwardRef<HTMLDivElement, QuotePreviewProps>(
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
-                  {formatMoney(lineAmount(item), quote.currency)}
+                  {formatMoney(displayLineAmount(item), quote.currency)}
                 </div>
               </div>
             ))
@@ -539,6 +540,7 @@ export const QuotePreview = React.forwardRef<HTMLDivElement, QuotePreviewProps>(
         {quote.notes && (
           <>
             <div className="h-px bg-[#E4E4E7] mb-4" />
+            <Eyebrow className="mb-2">Notes</Eyebrow>
             <p
               className="text-sm italic"
               style={{ fontFamily: SANS, color: "#71717B", lineHeight: 1.6 }}

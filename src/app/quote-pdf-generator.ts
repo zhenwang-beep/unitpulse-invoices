@@ -6,11 +6,11 @@ import {
   SCOPE_FOOTNOTE,
   formatMoney,
   formatQuoteDate,
-  lineAmount,
   orDash,
-  quoteSubtotal,
-  monthlyRecurringTotal,
-  initialAmountDue,
+  displayLineAmount,
+  displaySubtotal,
+  displayMonthly,
+  displayDueAtSigning,
   type Quote,
   type QuoteLineItem,
   type ScopeGroup,
@@ -269,10 +269,10 @@ export function generateQuotePDF(
 
   const items: QuoteLineItem[] = quote.lineItems ?? [];
   const currency = quote.currency || "USD";
-  const subtotal = quoteSubtotal(items);
+  const subtotal = displaySubtotal(quote);
   const setupFee = Number(quote.setupFee) || 0;
-  const totalMonthly = monthlyRecurringTotal(items);
-  const dueAtSigning = initialAmountDue(items, setupFee);
+  const totalMonthly = displayMonthly(quote);
+  const dueAtSigning = displayDueAtSigning(quote);
   const hasSetupFee  = setupFee > 0;
   const companyName = companySettings?.companyName || "UnitPulse";
 
@@ -555,7 +555,7 @@ export function generateQuotePDF(
         color: TEXT_SECONDARY,
         align: "right",
       });
-      addText(formatMoney(lineAmount(item), currency), colAmountX, yPos + 16, {
+      addText(formatMoney(displayLineAmount(item), currency), colAmountX, yPos + 16, {
         size: 9.5,
         style: "bold",
         color: TEXT_PRIMARY,
@@ -751,7 +751,7 @@ export function generateQuotePDF(
         orDash(
           quote.initialTermMonths === null || quote.initialTermMonths === undefined
             ? null
-            : `${quote.initialTermMonths} months`,
+            : `${quote.initialTermMonths} months from the service start date`,
         ),
       ],
       ["Renewal", orDash(quote.renewalTerms)],
@@ -837,6 +837,9 @@ export function generateQuotePDF(
     ) => {
       eyebrow(label, x, startY, { color: labelColor });
       let y = startY + 16;
+      if (list.length === 0) {
+        drawBullet("—", x, yPos, colW);
+      }
       list.forEach((entry) => {
         y += drawBullet(entry, x, y, width) + 5;
       });
@@ -873,6 +876,10 @@ export function generateQuotePDF(
         ensureSpace(16 + (list.length ? bulletHeight(list[0], contentWidth) : 0));
         eyebrow(label, margin, yPos, { color: labelColor });
         yPos += 16;
+        if (list.length === 0) {
+          drawBullet("—", margin, yPos, contentWidth);
+          yPos += 17;
+        }
         list.forEach((entry) => {
           const h = bulletHeight(entry, contentWidth);
           ensureSpace(h);

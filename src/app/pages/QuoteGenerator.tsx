@@ -233,8 +233,15 @@ export default function QuoteGenerator() {
   // says something the stored quote does not.
   const [dirty, setDirty] = useState(false);
 
+  // Bumped on every edit. The save handler snapshots it, and only adopts the
+  // server's response if nothing changed while the request was in flight —
+  // otherwise a slow save silently discards whatever was typed meanwhile and,
+  // worse, marks the result clean.
+  const revisionRef = useRef(0);
+
   const markDirty = useCallback(() => {
     pristineRef.current = false;
+    revisionRef.current += 1;
     setDirty(true);
   }, []);
 
@@ -383,6 +390,7 @@ export default function QuoteGenerator() {
       return;
     }
     setSaving(true);
+    const revisionAtSend = revisionRef.current;
     try {
       const res = await fetchAPI(
         savedId ? `/quotes/${savedId}` : "/quotes",
@@ -398,8 +406,19 @@ export default function QuoteGenerator() {
         return;
       }
       setSavedId(data.quote.id);
-      setQuote(data.quote);
-      setDirty(false);
+      if (revisionRef.current === revisionAtSend) {
+        setQuote(data.quote);
+        setDirty(false);
+      } else {
+        // Edited mid-save: keep what is on screen and stay dirty, but take the
+        // server-assigned identifiers so the next save updates rather than
+        // creating a second quote.
+        setQuote((q) => ({
+          ...q,
+          id: data.quote.id,
+          quoteNumber: data.quote.quoteNumber || q.quoteNumber,
+        }));
+      }
       toast.success(savedId ? "Quote updated" : "Quote saved");
       if (!savedId) navigate(`/quotes/${data.quote.id}`, { replace: true });
     } catch (e) {

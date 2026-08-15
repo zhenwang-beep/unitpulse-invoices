@@ -26,7 +26,7 @@ import {
   formatMoney,
   formatQuoteDate,
   orDash,
-  monthlyRecurringTotal,
+  displayMonthly,
   roundMoney,
   toISODate,
 } from "../types/quote";
@@ -73,7 +73,7 @@ function StatusChip({ status, note }: { status: QuoteStatus; note?: string }) {
 
 /** Every amount is rounded at the point of computation, never only at the end. */
 const quoteTotal = (quote: Quote): number =>
-  monthlyRecurringTotal(quote.lineItems || []);
+  displayMonthly(quote);
 
 const sumTotals = (quotes: Quote[]): number =>
   quotes.reduce((sum, q) => roundMoney(sum + quoteTotal(q)), 0);

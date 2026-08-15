@@ -34,6 +34,14 @@ export interface QuoteLineItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  /**
+   * Server-computed, from the database's GENERATED column. Present on a saved
+   * quote and authoritative when it is: Postgres numeric and JavaScript binary
+   * floats disagree even on plain 2-decimal input — 1.01 x 18.50 is 18.69 in
+   * the database and 18.68 in JS, because 18.685 * 100 is 1868.4999... So a
+   * saved document must render what was stored, not what the browser recomputes.
+   */
+  amount?: number;
 }
 
 /** One block of Section 02 — a titled group of scope bullets. */
@@ -104,6 +112,11 @@ export interface Quote {
   assumptionsNote: string;
   notes: string;
 
+  /** Server-computed totals. See QuoteLineItem.amount for why these win. */
+  subtotal?: number;
+  totalMonthly?: number;
+  initialAmountDue?: number;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -162,6 +175,30 @@ export const monthlyRecurringTotal = (items: QuoteLineItem[]): number =>
 /** What the client pays up front — the first month plus any one-time fee. */
 export const initialAmountDue = (items: QuoteLineItem[], setupFee: number): number =>
   roundMoney(quoteSubtotal(items) + (Number(setupFee) || 0));
+
+// ---------------------------------------------------------------------------
+// Display totals.
+//
+// Prefer what the database stored; fall back to local arithmetic only for a
+// draft the server has never seen. This is what keeps a downloaded PDF equal
+// to the record to the cent.
+// ---------------------------------------------------------------------------
+
+export const displayLineAmount = (item: QuoteLineItem): number =>
+  typeof item.amount === "number" ? item.amount : lineAmount(item);
+
+export const displaySubtotal = (q: Quote): number =>
+  typeof q.subtotal === "number" ? q.subtotal : quoteSubtotal(q.lineItems);
+
+export const displayMonthly = (q: Quote): number =>
+  typeof q.totalMonthly === "number"
+    ? q.totalMonthly
+    : monthlyRecurringTotal(q.lineItems);
+
+export const displayDueAtSigning = (q: Quote): number =>
+  typeof q.initialAmountDue === "number"
+    ? q.initialAmountDue
+    : initialAmountDue(q.lineItems, q.setupFee);
 
 /** Template rule: zero renders as 0; an em-dash means the value is unknown. */
 export const formatMoney = (n: number | null | undefined, currency = "USD"): string => {
