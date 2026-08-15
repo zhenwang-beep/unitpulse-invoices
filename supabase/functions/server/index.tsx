@@ -248,7 +248,10 @@ app.post("/make-server-3c030652/company-settings", requireAuth, async (c) => {
 });
 
 // Upload company logo
-app.post("/make-server-3c030652/upload-logo", async (c) => {
+// requireAuth: the uploaded path is what POST /company-settings stores as
+// logoPath, and that logo is drawn on every invoice and quote PDF. An
+// unauthenticated upload is an unauthenticated write to the letterhead.
+app.post("/make-server-3c030652/upload-logo", requireAuth, async (c) => {
   try {
     const formData = await c.req.formData();
     const file = formData.get("logo") as File;
@@ -527,6 +530,105 @@ app.delete("/make-server-3c030652/clients/:id", requireAuth, async (c) => {
   }
 });
 
+// ===========================================================================
+// Invoices
+//
+// An invoice is an opaque JSON blob in the kv store, and its key IS its
+// identity: the list route reads `user_<uid>_invoice_` by prefix, so whoever
+// chooses the key chooses whose list the record appears in. Two rules follow,
+// and every write below keeps both:
+//
+//   1. The key is derived from the authenticated user's own prefix, or checked
+//      against it. A caller-supplied key outside that prefix is refused and
+//      logged, never written.
+//   2. Identity, ownership and provenance are assigned AFTER the client's data
+//      is spread, from the stored record or the JWT — so a body carrying its
+//      own id, userId, createdByEmail or createdAt cannot win.
+//
+// Money is likewise the server's: the totals stored are recomputed from the
+// submitted line items, never the ones the caller sent, the same way
+// save_quote owns the totals on the quote side.
+// ===========================================================================
+
+// Everything a caller may write. The invoice editor sends exactly these
+// fields; anything else on a stored invoice belongs to the server.
+const EDITABLE_INVOICE_FIELDS = [
+  "invoiceId",
+  "issueDate",
+  "dueDate",
+  "clientName",
+  "clientAddress",
+  "clientCity",
+  "clientState",
+  "clientZip",
+  "clientCountry",
+  "lineItems",
+  "taxPercent",
+  "notes",
+];
+
+// What an invoice raised from a quote remembers about where it came from,
+// written by create_invoice_from_quote. The editor never sends these back, so
+// an update that only spread the body would drop them and the document would
+// forget it was ever raised from a quote — after which nothing on screen could
+// tell it apart from a hand-typed invoice.
+const INVOICE_PROVENANCE_FIELDS = [
+  "sourceQuoteId",
+  "sourceQuoteNumber",
+  "servicePeriodStart",
+  "servicePeriodEnd",
+  "invoiceKind",
+  "currency",
+];
+
+const pickFields = (source: any, fields: string[]): Record<string, any> => {
+  const picked: Record<string, any> = {};
+  if (!source || typeof source !== "object") return picked;
+  for (const field of fields) {
+    if (field in source) picked[field] = source[field];
+  }
+  return picked;
+};
+
+// Quantities and prices arrive as either numbers or strings, and a blank field
+// is zero rather than NaN — a single unparseable cell must not turn the whole
+// total into null.
+const invoiceNum = (v: any): number => {
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const round2 = (v: number): number =>
+  Math.round((v + Number.EPSILON) * 100) / 100;
+
+// A line raised from a quote carries an `amount` that Postgres computed in
+// numeric, which is the arithmetic the quote's own subtotal used. JavaScript's
+// binary floating point disagrees with it by a cent on some products, so a
+// stored amount is authoritative and kept; only a line without one is
+// multiplied out here.
+const invoiceLineAmount = (line: any): number => {
+  const amount = line && typeof line === "object" ? line.amount : undefined;
+  if (amount !== undefined && amount !== null && amount !== "") {
+    return invoiceNum(amount);
+  }
+  return round2(invoiceNum(line?.quantity) * invoiceNum(line?.unitPrice));
+};
+
+// The totals an invoice is stored with. Taking these from the body would mean
+// the number on the PDF is whatever the caller said it was, independent of the
+// lines above it.
+const invoiceMoney = (data: any) => {
+  const lineItems = Array.isArray(data?.lineItems) ? data.lineItems : [];
+  const subtotal = round2(
+    lineItems.reduce(
+      (sum: number, line: any) => sum + invoiceLineAmount(line),
+      0,
+    ),
+  );
+  const tax = round2((subtotal * invoiceNum(data?.taxPercent)) / 100);
+  return { subtotal, tax, total: round2(subtotal + tax) };
+};
+
 // Get all invoices
 app.get("/make-server-3c030652/invoices", requireAuth, async (c) => {
   try {
@@ -571,28 +673,55 @@ app.post("/make-server-3c030652/invoices", requireAuth, async (c) => {
   try {
     const userId = c.get("userId");
     const body = await c.req.json();
-    const { invoiceData, subtotal, tax, total } = body;
-    
-    if (!invoiceData) {
+    const { invoiceData } = body;
+
+    if (!invoiceData || typeof invoiceData !== "object") {
       return c.json({ error: "Invoice data is required" }, 400);
     }
-    
+
+    // The key is derived from this, so an absent one would write every such
+    // invoice to the same "…_invoice_undefined" key.
+    const invoiceNumber = String(invoiceData.invoiceId ?? "").trim();
+    if (!invoiceNumber) {
+      return c.json({ error: "Invoice ID is required" }, 400);
+    }
+
     // Use invoice ID as the key with user prefix
-    const invoiceId = `user_${userId}_invoice_${invoiceData.invoiceId}`;
-    
+    const invoiceId = `user_${userId}_invoice_${invoiceNumber}`;
+
+    // POST creates; it never overwrites. The invoice number comes from the
+    // caller, so without this a second POST reusing a number already in use
+    // would upsert straight over the document that has it — including one
+    // raised from a quote, whose quote_invoice_links row would then describe
+    // an invoice whose contents had been replaced.
+    const existingInvoice = await kv.get(invoiceId);
+    if (existingInvoice) {
+      return c.json(
+        {
+          error: `Invoice ${invoiceNumber} already exists. Open it from the invoice list to edit it.`,
+        },
+        409,
+      );
+    }
+
+    const { subtotal, tax, total } = invoiceMoney(invoiceData);
+
     const invoice = {
+      ...pickFields(invoiceData, EDITABLE_INVOICE_FIELDS),
+      // Assigned after the client's data, so a body carrying its own id or
+      // userId cannot decide who owns the record.
+      invoiceId: invoiceNumber,
       id: invoiceId,
       userId,
       createdByEmail: c.get("userEmail"),
-      ...invoiceData,
       subtotal,
       tax,
       total,
       createdAt: new Date().toISOString(),
     };
-    
+
     await kv.set(invoiceId, invoice);
-    
+
     return c.json({ invoice });
   } catch (error) {
     console.error("Error saving invoice:", error);
@@ -606,33 +735,60 @@ app.put("/make-server-3c030652/invoices/:id", requireAuth, async (c) => {
     const userId = c.get("userId");
     const id = c.req.param("id");
     const body = await c.req.json();
-    const { invoiceData, subtotal, tax, total } = body;
-    
-    if (!invoiceData) {
+    const { invoiceData } = body;
+
+    if (!invoiceData || typeof invoiceData !== "object") {
       return c.json({ error: "Invoice data is required" }, 400);
     }
-    
-    // Get existing invoice to preserve createdAt and verify ownership
-    const existingInvoice = await kv.get(id);
-    
-    if (existingInvoice && existingInvoice.userId !== userId) {
+
+    // The :id param is the kv key itself, and GET /invoices lists by
+    // `user_<uid>_invoice_` prefix. A key outside the caller's own prefix is
+    // therefore a write into someone else's invoice list however innocent the
+    // body looks, so it is refused before anything is read or written.
+    const keyPrefix = `user_${userId}_invoice_`;
+    if (!id.startsWith(keyPrefix)) {
+      console.error(
+        `Rejected invoice update: user ${userId} attempted to write key "${id}"`,
+      );
       return c.json({ error: "Unauthorized - You don't own this invoice" }, 403);
     }
-    
+
+    // Get existing invoice to preserve createdAt and verify ownership
+    const existingInvoice = await kv.get(id);
+
+    // PUT updates, it never creates: kv.set is an upsert, so without this any
+    // unused key inside the prefix would mint a record with a caller-chosen
+    // key and a caller-chosen invoice number.
+    if (!existingInvoice) {
+      return c.json({ error: "Invoice not found" }, 404);
+    }
+
+    // Verify user owns this invoice
+    if (existingInvoice.userId !== userId) {
+      return c.json({ error: "Unauthorized - You don't own this invoice" }, 403);
+    }
+
+    const { subtotal, tax, total } = invoiceMoney(invoiceData);
+
     const invoice = {
+      // Where this invoice came from is the stored record's to state, not the
+      // editor's — the editor does not send these fields at all.
+      ...pickFields(existingInvoice, INVOICE_PROVENANCE_FIELDS),
+      ...pickFields(invoiceData, EDITABLE_INVOICE_FIELDS),
+      // Identity, ownership and dates are assigned after the client's data, so
+      // an invoiceData carrying its own id or userId cannot win.
       id,
       userId,
-      createdByEmail: existingInvoice?.createdByEmail || c.get("userEmail"),
-      ...invoiceData,
+      createdByEmail: existingInvoice.createdByEmail || c.get("userEmail"),
       subtotal,
       tax,
       total,
-      createdAt: existingInvoice?.createdAt || new Date().toISOString(),
+      createdAt: existingInvoice.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     await kv.set(id, invoice);
-    
+
     return c.json({ invoice });
   } catch (error) {
     console.error("Error updating invoice:", error);
@@ -656,7 +812,45 @@ app.delete("/make-server-3c030652/invoices/:id", requireAuth, async (c) => {
     if (existingInvoice.userId !== userId) {
       return c.json({ error: "Unauthorized - You don't own this invoice" }, 403);
     }
-    
+
+    // An invoice raised from a quote is half of a pair: the other half is its
+    // quote_invoice_links row, which nothing here can remove — quote_id is ON
+    // DELETE RESTRICT, and the row is what makes a service period
+    // un-double-billable. Dropping the blob alone would leave that row behind,
+    // and with it a quote that can never be deleted or moved off its status,
+    // plus a re-invoice of the same period answering `alreadyExists` with an
+    // invoice that no longer exists. The link is deliberately NOT deleted
+    // either: an invoice already issued to a client should not silently vanish.
+    // Voiding one is a separate feature; until it exists, this refuses.
+    const { data: link, error: linkError } = await supabase
+      .from("quote_invoice_links")
+      .select("quote_id, invoice_number")
+      .eq("invoice_key", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    // Fail closed: deleting while it is unknown whether a link exists is
+    // exactly the case that orphans one.
+    if (linkError) {
+      console.error(
+        "Error checking quote link before deleting invoice:",
+        linkError,
+      );
+      return c.json({ error: "Failed to delete invoice" }, 500);
+    }
+
+    if (link) {
+      const invoiceNumber =
+        link.invoice_number || existingInvoice.invoiceId || id;
+      const quoteNumber = existingInvoice.sourceQuoteNumber || link.quote_id;
+      return c.json(
+        {
+          error: `Invoice ${invoiceNumber} was raised from quote ${quoteNumber} and cannot be deleted.`,
+        },
+        409,
+      );
+    }
+
     await kv.del(id);
     return c.json({ success: true });
   } catch (error) {
