@@ -1072,6 +1072,27 @@ const saveQuoteFailure = (
 };
 
 // Get all quotes, newest first, each with its line items
+// The number a save would assign, so the editor can show it instead of a vague
+// "assigned later". Registered BEFORE /quotes/:id or that route would swallow
+// "next-number" as an id. It is a preview only — save_quote still allocates
+// authoritatively, and this can legitimately go stale if another quote is
+// created first.
+app.get("/make-server-3c030652/quotes/next-number", requireAuth, async (c) => {
+  try {
+    const { data, error } = await supabase.rpc("next_quote_number", {
+      p_user_id: c.get("userId"),
+    });
+    if (error) {
+      console.error("Error previewing quote number:", error.message);
+      return c.json({ nextNumber: null });
+    }
+    return c.json({ nextNumber: data ?? null });
+  } catch (error) {
+    console.error("Error previewing quote number:", error);
+    return c.json({ nextNumber: null });
+  }
+});
+
 app.get("/make-server-3c030652/quotes", requireAuth, async (c) => {
   try {
     const userId = c.get("userId");

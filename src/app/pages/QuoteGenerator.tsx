@@ -268,6 +268,9 @@ export default function QuoteGenerator() {
   const clientBoxRef = useRef<HTMLDivElement>(null);
   // Field-level validation, surfaced on save.
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // What the server would assign on save. A hint, not a reservation — nothing is
+  // allocated until save, so an abandoned draft leaves no gap in the sequence.
+  const [nextNumber, setNextNumber] = useState<string | null>(null);
 
   // Cleared by the first edit; see the settings loader below.
   const pristineRef = useRef(true);
@@ -320,6 +323,20 @@ export default function QuoteGenerator() {
         }
       } catch (e) {
         console.error("Error loading company settings:", e);
+      }
+    })();
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    (async () => {
+      try {
+        const res = await fetchAPI("/quotes/next-number");
+        if (!res.ok) return;
+        const data = await res.json();
+        setNextNumber(data.nextNumber || null);
+      } catch (e) {
+        console.error("Error previewing quote number:", e);
       }
     })();
   }, [isEditMode]);
@@ -578,7 +595,11 @@ export default function QuoteGenerator() {
               style={{ fontFamily: SANS }}
               aria-label="Quote number"
             >
-              {quote.quoteNumber || "Assigned on save"}
+              {quote.quoteNumber
+                ? quote.quoteNumber
+                : nextNumber
+                  ? `Next: ${nextNumber}`
+                  : "Assigned on save"}
             </div>
           </div>
           <div>
