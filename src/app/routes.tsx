@@ -4,6 +4,8 @@ import InvoiceManagement from "./pages/InvoiceManagement";
 import ItemManagement from "./pages/ItemManagement";
 import ClientManagement from "./pages/ClientManagement";
 import SettingsPage from "./pages/SettingsPage";
+import QuoteManagement from "./pages/QuoteManagement";
+import QuoteGenerator from "./pages/QuoteGenerator";
 import Login from "./pages/Login";
 import AuthCallback from "./pages/AuthCallback";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -30,6 +32,30 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <InvoiceGeneratorPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/quotes",
+    element: (
+      <ProtectedRoute>
+        <QuoteManagement />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/quotes/new",
+    element: (
+      <ProtectedRoute>
+        <QuoteGenerator />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/quotes/:id",
+    element: (
+      <ProtectedRoute>
+        <QuoteGenerator />
       </ProtectedRoute>
     ),
   },

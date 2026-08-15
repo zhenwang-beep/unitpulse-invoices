@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
-import { LayoutDashboard, Plus, Users, Package, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Plus, Users, Package, Settings, Menu, X, FileText } from 'lucide-react';
 import { UserProfileMenu } from './UserProfileMenu';
 import logoPng from '../../assets/logo.svg';
 
@@ -11,10 +11,19 @@ export function Navbar() {
 
   const navItems = [
     { path: '/', label: 'Invoices', icon: LayoutDashboard },
+    { path: '/quotes', label: 'Quotes', icon: FileText },
     { path: '/clients', label: 'Clients', icon: Users },
     { path: '/items', label: 'Items', icon: Package },
     { path: '/settings', label: 'Settings', icon: Settings },
   ];
+
+  // A section stays active on its sub-routes, so /quotes/new and /quotes/:id
+  // keep the Quotes item lit. '/' is exact — everything starts with it — but
+  // the invoice editor at /new belongs to the Invoices section.
+  const isActivePath = (path: string) =>
+    path === '/'
+      ? location.pathname === '/' || location.pathname.startsWith('/new')
+      : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -41,7 +50,7 @@ export function Navbar() {
         {/* Desktop Nav Links */}
         <div className="hidden md:flex items-center gap-1">
           {navItems.map(({ path, label, icon: Icon }) => {
-            const isActive = location.pathname === path;
+            const isActive = isActivePath(path);
             return (
               <button
                 key={path}
@@ -78,7 +87,7 @@ export function Navbar() {
         <div className="md:hidden bg-white border-b border-[#E4E4E7] sticky top-[57px] z-30 shadow-sm">
           <div className="px-3 py-2 flex flex-col gap-0.5">
             {navItems.map(({ path, label, icon: Icon }) => {
-              const isActive = location.pathname === path;
+              const isActive = isActivePath(path);
               return (
                 <button
                   key={path}

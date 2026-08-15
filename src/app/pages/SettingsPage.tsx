@@ -1,9 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Upload, Building2 } from "lucide-react";
+import { Upload, Building2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Navbar } from "../components/Navbar";
 import { fetchAPI } from "../utils/api";
 import logoPng from "../../assets/logo.svg";
+import {
+  type QuoteDefaults,
+  DEFAULT_QUOTE_DEFAULTS,
+} from "../types/quote";
 
 interface CompanySettings {
   companyName: string;
@@ -25,6 +29,11 @@ const defaultSettings: CompanySettings = {
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState<CompanySettings>(defaultSettings);
+  // Boilerplate every new quote inherits. Saved alongside the company fields in
+  // one request, so the two cards can never overwrite each other's values.
+  const [quoteDefaults, setQuoteDefaults] = useState<QuoteDefaults>(
+    DEFAULT_QUOTE_DEFAULTS,
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -44,6 +53,12 @@ export default function SettingsPage() {
             companyEmail: data.settings.companyEmail || "",
             companyPhone: data.settings.companyPhone || "",
           });
+          if (data.settings.quoteDefaults) {
+            setQuoteDefaults({
+              ...DEFAULT_QUOTE_DEFAULTS,
+              ...data.settings.quoteDefaults,
+            });
+          }
         }
       } catch (error) {
         console.error("Error loading settings:", error);
@@ -100,6 +115,7 @@ export default function SettingsPage() {
           logoPath: formData.logoPath,
           companyEmail: formData.companyEmail,
           companyPhone: formData.companyPhone,
+          quoteDefaults,
         }),
       });
       if (!response.ok) throw new Error("Failed to save settings");
@@ -228,6 +244,154 @@ export default function SettingsPage() {
                 className={inputClass}
                 style={{ fontFamily: "Manrope, sans-serif" }}
               />
+            </div>
+
+            {/* ---- Quote defaults ---- */}
+            <div className="pt-6 border-t border-[#E4E4E7]">
+              <div className="flex items-center gap-2 mb-1">
+                <FileText className="w-5 h-5 text-[#71717B]" />
+                <h2
+                  className="text-xl"
+                  style={{ fontFamily: "Newsreader, Georgia, serif", fontWeight: 500 }}
+                >
+                  Quote defaults
+                </h2>
+              </div>
+              <p
+                className="text-sm text-[#71717B] mb-5"
+                style={{ fontFamily: "Manrope, sans-serif" }}
+              >
+                Boilerplate every new quote starts from. Editing a quote never
+                changes these.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-[#71717B] mb-2"
+                    style={{ fontFamily: "Manrope, sans-serif" }}
+                  >
+                    Service line
+                  </label>
+                  <input
+                    type="text"
+                    value={quoteDefaults.serviceLine}
+                    onChange={(e) =>
+                      setQuoteDefaults((p) => ({ ...p, serviceLine: e.target.value }))
+                    }
+                    className={inputClass}
+                    style={{ fontFamily: "Manrope, sans-serif" }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {(
+                    [
+                      ["Account executive", "issuerName", "text"],
+                      ["AE email", "issuerEmail", "email"],
+                      ["AE phone", "issuerPhone", "text"],
+                    ] as const
+                  ).map(([label, key, type]) => (
+                    <div key={key}>
+                      <label
+                        className="block text-sm font-medium text-[#71717B] mb-2"
+                        style={{ fontFamily: "Manrope, sans-serif" }}
+                      >
+                        {label}
+                      </label>
+                      <input
+                        type={type}
+                        value={quoteDefaults[key]}
+                        onChange={(e) =>
+                          setQuoteDefaults((p) => ({ ...p, [key]: e.target.value }))
+                        }
+                        className={inputClass}
+                        style={{ fontFamily: "Manrope, sans-serif" }}
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-[#71717B] mb-2"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      Valid for (days)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={quoteDefaults.validityDays}
+                      onChange={(e) =>
+                        setQuoteDefaults((p) => ({
+                          ...p,
+                          validityDays: Math.max(1, Number(e.target.value) || 1),
+                        }))
+                      }
+                      className={inputClass}
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-[#71717B] mb-2"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      Initial term (months)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={quoteDefaults.initialTermMonths}
+                      onChange={(e) =>
+                        setQuoteDefaults((p) => ({
+                          ...p,
+                          initialTermMonths: Math.max(1, Number(e.target.value) || 1),
+                        }))
+                      }
+                      className={inputClass}
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    />
+                  </div>
+                </div>
+
+                {(
+                  [
+                    ["Renewal", "renewalTerms"],
+                    ["Cancellation", "cancellationTerms"],
+                    ["Billing cadence", "billingCadence"],
+                    ["Payment terms", "paymentTerms"],
+                    ["Price changes", "priceChangeTerms"],
+                    ["Quote validity", "quoteValidityTerms"],
+                    ["Assumptions note", "assumptionsNote"],
+                  ] as const
+                ).map(([label, key]) => (
+                  <div key={key}>
+                    <label
+                      className="block text-sm font-medium text-[#71717B] mb-2"
+                      style={{ fontFamily: "Manrope, sans-serif" }}
+                    >
+                      {label}
+                    </label>
+                    <textarea
+                      rows={key === "assumptionsNote" ? 4 : 2}
+                      value={quoteDefaults[key]}
+                      onChange={(e) =>
+                        setQuoteDefaults((p) => ({ ...p, [key]: e.target.value }))
+                      }
+                      className={inputClass}
+                      style={{ fontFamily: "Manrope, sans-serif", resize: "vertical" }}
+                    />
+                  </div>
+                ))}
+
+                <p
+                  className="text-xs text-[#71717B]"
+                  style={{ fontFamily: "Manrope, sans-serif" }}
+                >
+                  Scope groups and the included / not-included lists are edited on
+                  the quote itself, and seed from the UnitPulse template.
+                </p>
+              </div>
             </div>
 
             {/* Save Button */}

@@ -52,23 +52,134 @@ app.get("/make-server-3c030652/health", (c) => {
   return c.json({ status: "ok" });
 });
 
+// ---------------------------------------------------------------------------
+// Company settings defaults.
+//
+// The edge function cannot import from src/, so DEFAULT_QUOTE_DEFAULTS is
+// transcribed here from src/app/types/quote.ts. Keep the two in sync — this is
+// the fallback a new account inherits before it has saved any quote
+// boilerplate of its own.
+// ---------------------------------------------------------------------------
+
+const DEFAULT_COMPANY_SETTINGS = {
+  companyName: "UnitPulse",
+  companyAddress: "800 S Harvard Blvd\nLos Angeles, CA 90005\nUnited States",
+  logoPath: null,
+  companyEmail: "",
+  companyPhone: "",
+};
+
+const DEFAULT_QUOTE_DEFAULTS = {
+  serviceLine: "GoAiden by UnitPulse  ·  AI marketing & content engagement",
+  issuerName: "",
+  issuerEmail: "",
+  issuerPhone: "",
+  validityDays: 30,
+  initialTermMonths: 3,
+  renewalTerms: "Auto-renews month-to-month at the end of the initial term",
+  cancellationTerms:
+    "30 days' written notice, effective at the end of the then-current billing month",
+  billingCadence: "Monthly in advance, invoiced on the 1st of each month",
+  paymentTerms: "Net 30 from invoice date, by ACH / check / card",
+  priceChangeTerms:
+    "Fixed for the initial term; any change thereafter requires 30 days' notice",
+  quoteValidityTerms: "30 days from the quote date shown above",
+  scopeGroups: [
+    {
+      id: "scope-search",
+      title: "Search & AI visibility",
+      category: "SEO / GEO",
+      bullets: [
+        "Full SEO and GEO assessment of the property's web presence",
+        "Local search optimization recommendations, prioritized by expected lift",
+        "Visibility monitoring across AI answer engines and traditional search",
+      ],
+    },
+    {
+      id: "scope-strategy",
+      title: "Marketing strategy",
+      category: "Planning",
+      bullets: [
+        "Custom strategy built to the property's demographics and lease-up stage",
+        "Monthly plan review with recommendations drawn from the property's own data",
+      ],
+    },
+    {
+      id: "scope-content",
+      title: "Content production",
+      category: "Creative",
+      bullets: [
+        "Image editing and retouching of property photography",
+        "Poster and flyer design for on-site and digital placement",
+        "Copywriting for listings, ads, and social captions",
+        "Short-form video creation",
+      ],
+    },
+    {
+      id: "scope-social",
+      title: "Social management",
+      category: "Distribution",
+      bullets: [
+        "End-to-end management of connected social accounts",
+        "Regular scheduled posting on an agreed cadence",
+      ],
+    },
+  ],
+  included: [
+    "Onboarding and account connection setup",
+    "All content production described in Section 02",
+    "Monthly performance reporting",
+    "Email support with 1 business day response",
+  ],
+  excluded: [
+    "Paid media spend (billed directly by the ad platform)",
+    "Professional photography or videography shoots on site",
+    "Website development or hosting",
+    "Third-party licensing, stock media, or listing-syndication fees",
+  ],
+  assumptionsNote:
+    "This quote assumes the client provides administrative access to the property's social, Google Business, and listing accounts within 5 business days of signature. Delays in access shift the service start date without changing the fee.",
+};
+
+// Stored defaults win field by field; anything absent falls back to the
+// transcribed template. The three list fields are checked explicitly so a
+// malformed stored value can never hand the quote editor a non-array.
+const mergeQuoteDefaults = (stored: any) => {
+  const s = stored && typeof stored === "object" ? stored : {};
+  return {
+    ...DEFAULT_QUOTE_DEFAULTS,
+    ...s,
+    scopeGroups: Array.isArray(s.scopeGroups)
+      ? s.scopeGroups
+      : DEFAULT_QUOTE_DEFAULTS.scopeGroups,
+    included: Array.isArray(s.included) ? s.included : DEFAULT_QUOTE_DEFAULTS.included,
+    excluded: Array.isArray(s.excluded) ? s.excluded : DEFAULT_QUOTE_DEFAULTS.excluded,
+  };
+};
+
 // Get company settings
 app.get("/make-server-3c030652/company-settings", async (c) => {
   try {
-    const settings = await kv.get("company_settings");
-    
-    // If settings exist and include a logo path, generate a signed URL
-    if (settings && settings.logoPath) {
+    const stored = await kv.get("company_settings");
+
+    const settings: Record<string, any> = {
+      ...DEFAULT_COMPANY_SETTINGS,
+      ...(stored || {}),
+      quoteDefaults: mergeQuoteDefaults(stored?.quoteDefaults),
+    };
+
+    // If settings include a logo path, generate a signed URL
+    if (settings.logoPath) {
       const { data: signedUrl } = await supabase.storage
         .from(BUCKET_NAME)
         .createSignedUrl(settings.logoPath, 3600); // 1 hour expiry
-      
+
       if (signedUrl) {
         settings.logoUrl = signedUrl.signedUrl;
       }
     }
-    
-    return c.json({ settings: settings || null });
+
+    return c.json({ settings });
   } catch (error) {
     console.error("Error fetching company settings:", error);
     return c.json({ error: "Failed to fetch settings" }, 500);
@@ -80,18 +191,38 @@ app.post("/make-server-3c030652/company-settings", async (c) => {
   try {
     const body = await c.req.json();
     const { companyName, companyAddress, logoPath, companyEmail, companyPhone } = body;
-    
-    const settings = {
-      companyName: companyName || "UnitPulse",
-      companyAddress: companyAddress || "800 S Harvard Blvd\nLos Angeles, CA 90005\nUnited States",
-      logoPath: logoPath || null,
-      companyEmail: companyEmail || "",
-      companyPhone: companyPhone || "",
+
+    // A caller may send only the company fields (the settings page) or only
+    // quoteDefaults (the quote defaults editor). Each field is written only
+    // when its key is present, so neither caller clobbers the other's data.
+    const existing = (await kv.get("company_settings")) || {};
+    const sent = (key: string) => body && typeof body === "object" && key in body;
+
+    const settings: Record<string, any> = {
+      ...existing,
+      companyName: sent("companyName")
+        ? companyName || DEFAULT_COMPANY_SETTINGS.companyName
+        : existing.companyName || DEFAULT_COMPANY_SETTINGS.companyName,
+      companyAddress: sent("companyAddress")
+        ? companyAddress || DEFAULT_COMPANY_SETTINGS.companyAddress
+        : existing.companyAddress || DEFAULT_COMPANY_SETTINGS.companyAddress,
+      logoPath: sent("logoPath") ? logoPath || null : existing.logoPath || null,
+      companyEmail: sent("companyEmail") ? companyEmail || "" : existing.companyEmail || "",
+      companyPhone: sent("companyPhone") ? companyPhone || "" : existing.companyPhone || "",
       updatedAt: new Date().toISOString(),
     };
-    
+
+    // Quote boilerplate is patched, not replaced: a body carrying one changed
+    // field must not blank the rest.
+    if (sent("quoteDefaults")) {
+      settings.quoteDefaults = mergeQuoteDefaults({
+        ...(existing.quoteDefaults || {}),
+        ...(body.quoteDefaults || {}),
+      });
+    }
+
     await kv.set("company_settings", settings);
-    
+
     // Generate signed URL for the logo
     if (settings.logoPath) {
       const { data: signedUrl } = await supabase.storage
@@ -525,6 +656,556 @@ app.delete("/make-server-3c030652/invoices/:id", requireAuth, async (c) => {
   } catch (error) {
     console.error("Error deleting invoice:", error);
     return c.json({ error: "Failed to delete invoice" }, 500);
+  }
+});
+
+// ===========================================================================
+// Service quotes
+//
+// Invoices are opaque JSON blobs in the kv store. Quotes are not: they live in
+// public.quotes and public.quote_line_items, created by
+// supabase/migrations/20260814000000_create_service_quotes.sql.
+//
+// Two invariants hold across every handler below:
+//   1. user_id comes from the verified JWT, never from the request body, and
+//      every by-id query filters on BOTH id AND user_id, so one account can
+//      never read or mutate another's quote. Nothing matched means 404.
+//   2. subtotal and total_monthly are recomputed here from the submitted line
+//      items. A client-sent total is never persisted — it can disagree with
+//      the client's own rows, and this stored figure is what the PDF and the
+//      accepted quote are read from.
+// ===========================================================================
+
+const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "expired"];
+
+// Quote plus its line items in one round trip, so the list page never has to
+// fetch items per row.
+const QUOTE_SELECT = "*, quote_line_items(*)";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Money, mirroring the helpers in src/app/types/quote.ts (which this file
+// cannot import). Each amount is rounded at the point of computation so the
+// stored row, the preview and the PDF agree to the cent.
+const roundMoney = (n: number): number =>
+  Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
+
+const num = (v: any): number =>
+  v === null || v === undefined || v === "" ? 0 : Number(v);
+
+const lineAmount = (item: any): number =>
+  roundMoney((num(item?.quantity) || 0) * (num(item?.unitPrice) || 0));
+
+const quoteSubtotal = (items: any[]): number =>
+  roundMoney(items.reduce((sum, item) => sum + lineAmount(item), 0));
+
+const text = (v: any): string => (v === null || v === undefined ? "" : String(v));
+
+const asArray = (v: any): any[] => (Array.isArray(v) ? v : []);
+
+// yyyy-mm-dd, and a real calendar day — "2026-02-31" matches the shape but is
+// not a date.
+const isISODate = (v: any): boolean => {
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const [y, m, d] = v.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return (
+    dt.getUTCFullYear() === y &&
+    dt.getUTCMonth() === m - 1 &&
+    dt.getUTCDate() === d
+  );
+};
+
+// Postgres cannot cast "" to date; an unset optional date must be null.
+const dateOrNull = (v: any): string | null => (isISODate(v) ? v : null);
+
+// quotes_term_positive allows NULL or a positive integer, so 0, "" and
+// negatives all mean "no fixed term".
+const initialTermOrNull = (v: any): number | null => {
+  const n = Math.round(num(v));
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+// The UNIQUE (user_id, quote_number) constraint surfaces as Postgres 23505.
+const isDuplicateQuoteNumber = (error: any): boolean => error?.code === "23505";
+
+/**
+ * The quote editor posts the document wrapped as { quote }, the same shape the
+ * invoice routes above use for { invoiceData }. A bare document body is
+ * accepted too, so the endpoint does not depend on which of the two shapes a
+ * caller happens to send.
+ */
+const readQuoteBody = (raw: any): any =>
+  raw && typeof raw === "object" && raw.quote && typeof raw.quote === "object"
+    ? raw.quote
+    : raw;
+
+/**
+ * Returns a specific message when the payload cannot be stored, or null when
+ * it can. Every branch names the offending field and the value it saw — a bare
+ * "invalid" tells the person filling in the form nothing.
+ */
+const validateQuoteBody = (body: any): string | null => {
+  if (!body || typeof body !== "object") return "A quote object is required.";
+
+  if (!text(body.quoteNumber).trim()) return "Quote number is required.";
+
+  const status = text(body.status) || "draft";
+  if (!QUOTE_STATUSES.includes(status)) {
+    return `Status "${status}" is not allowed. Use one of: ${QUOTE_STATUSES.join(", ")}.`;
+  }
+
+  if (!isISODate(body.quoteDate)) {
+    return `Quote date "${text(body.quoteDate)}" is not a valid date. Use YYYY-MM-DD.`;
+  }
+  if (!isISODate(body.validUntil)) {
+    return `Valid until "${text(body.validUntil)}" is not a valid date. Use YYYY-MM-DD.`;
+  }
+  // Both are zero-padded yyyy-mm-dd, so a string compare is a date compare.
+  if (body.validUntil < body.quoteDate) {
+    return `Valid until (${body.validUntil}) cannot be earlier than the quote date (${body.quoteDate}).`;
+  }
+  if (text(body.serviceStartDate).trim() && !isISODate(body.serviceStartDate)) {
+    return `Service start date "${text(body.serviceStartDate)}" is not a valid date. Use YYYY-MM-DD.`;
+  }
+
+  if (body.lineItems !== undefined && !Array.isArray(body.lineItems)) {
+    return "Line items must be an array.";
+  }
+  const items = asArray(body.lineItems);
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] || {};
+    const label = text(item.serviceName).trim() || `line ${i + 1}`;
+    const quantity = num(item.quantity);
+    const unitPrice = num(item.unitPrice);
+    if (!Number.isFinite(quantity) || quantity < 0) {
+      return `Quantity for "${label}" must be a number of 0 or more.`;
+    }
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+      return `Unit price for "${label}" must be an amount of 0 or more.`;
+    }
+  }
+
+  const setupFee = num(body.setupFee);
+  if (!Number.isFinite(setupFee) || setupFee < 0) {
+    return "One-time setup fee must be an amount of 0 or more.";
+  }
+
+  for (const key of ["scopeGroups", "included", "excluded"]) {
+    if (body[key] !== undefined && !Array.isArray(body[key])) {
+      return `${key} must be an array.`;
+    }
+  }
+
+  return null;
+};
+
+// Totals are derived here and nowhere else.
+const computeQuoteTotals = (body: any) => {
+  const subtotal = quoteSubtotal(asArray(body.lineItems));
+  const setupFee = roundMoney(num(body.setupFee));
+  return { subtotal, setupFee, totalMonthly: roundMoney(subtotal + setupFee) };
+};
+
+// ---------------------------------------------------------------------------
+// The one place quote field names are translated. camelCase is the TS side
+// (src/app/types/quote.ts); snake_case is Postgres.
+//
+// user_id and created_by_email are deliberately absent from quoteToRow:
+// ownership is stamped from the JWT at the call site so a body can never
+// claim it.
+// ---------------------------------------------------------------------------
+
+const quoteToRow = (
+  body: any,
+  totals: { subtotal: number; setupFee: number; totalMonthly: number },
+) => ({
+  quote_number: text(body.quoteNumber).trim(),
+  status: text(body.status) || "draft",
+
+  // Issued to
+  client_name: text(body.clientName),
+  client_contact_name: text(body.clientContactName),
+  client_contact_title: text(body.clientContactTitle),
+  client_email: text(body.clientEmail),
+  client_phone: text(body.clientPhone),
+  client_address: text(body.clientAddress),
+
+  // Issued by
+  issuer_name: text(body.issuerName),
+  issuer_email: text(body.issuerEmail),
+  issuer_phone: text(body.issuerPhone),
+
+  // Dark header band
+  service_line: text(body.serviceLine),
+  prepared_for_address: text(body.preparedForAddress),
+
+  quote_date: body.quoteDate,
+  valid_until: body.validUntil,
+  service_start_date: dateOrNull(body.serviceStartDate),
+
+  // Section 03
+  initial_term_months: initialTermOrNull(body.initialTermMonths),
+  renewal_terms: text(body.renewalTerms),
+  cancellation_terms: text(body.cancellationTerms),
+  billing_cadence: text(body.billingCadence),
+  payment_terms: text(body.paymentTerms),
+  price_change_terms: text(body.priceChangeTerms),
+  quote_validity_terms: text(body.quoteValidityTerms),
+
+  // Section 01 — server-computed, never taken from the body
+  currency: text(body.currency).trim() || "USD",
+  subtotal: totals.subtotal,
+  setup_fee: totals.setupFee,
+  total_monthly: totals.totalMonthly,
+
+  // Sections 02 & 04
+  scope_groups: asArray(body.scopeGroups),
+  included: asArray(body.included),
+  excluded: asArray(body.excluded),
+  assumptions_note: text(body.assumptionsNote),
+  notes: text(body.notes),
+});
+
+const rowToLineItem = (row: any) => ({
+  id: row.id,
+  position: Number(row.position) || 0,
+  serviceName: row.service_name ?? "",
+  description: row.description ?? "",
+  quantity: Number(row.quantity) || 0,
+  unitPrice: Number(row.unit_price) || 0,
+  // Generated column — the line total can never drift from its inputs.
+  amount: Number(row.amount) || 0,
+});
+
+const rowToQuote = (row: any) => ({
+  id: row.id,
+  userId: row.user_id,
+  createdByEmail: row.created_by_email ?? "",
+
+  quoteNumber: row.quote_number,
+  status: row.status,
+
+  clientName: row.client_name ?? "",
+  clientContactName: row.client_contact_name ?? "",
+  clientContactTitle: row.client_contact_title ?? "",
+  clientEmail: row.client_email ?? "",
+  clientPhone: row.client_phone ?? "",
+  clientAddress: row.client_address ?? "",
+
+  issuerName: row.issuer_name ?? "",
+  issuerEmail: row.issuer_email ?? "",
+  issuerPhone: row.issuer_phone ?? "",
+
+  serviceLine: row.service_line ?? "",
+  preparedForAddress: row.prepared_for_address ?? "",
+
+  quoteDate: row.quote_date ?? "",
+  validUntil: row.valid_until ?? "",
+  serviceStartDate: row.service_start_date ?? "",
+
+  initialTermMonths:
+    row.initial_term_months === null || row.initial_term_months === undefined
+      ? null
+      : Number(row.initial_term_months),
+  renewalTerms: row.renewal_terms ?? "",
+  cancellationTerms: row.cancellation_terms ?? "",
+  billingCadence: row.billing_cadence ?? "",
+  paymentTerms: row.payment_terms ?? "",
+  priceChangeTerms: row.price_change_terms ?? "",
+  quoteValidityTerms: row.quote_validity_terms ?? "",
+
+  currency: row.currency ?? "USD",
+  // Sorted here rather than in the query so the order does not depend on the
+  // embedded-resource ordering syntax of a particular client version.
+  lineItems: asArray(row.quote_line_items)
+    .slice()
+    .sort((a: any, b: any) => (Number(a?.position) || 0) - (Number(b?.position) || 0))
+    .map(rowToLineItem),
+  setupFee: Number(row.setup_fee) || 0,
+  // Echoed from the stored, server-computed columns. The client can derive
+  // these from lineItems, but the list page should not have to.
+  subtotal: Number(row.subtotal) || 0,
+  totalMonthly: Number(row.total_monthly) || 0,
+
+  scopeGroups: asArray(row.scope_groups),
+  included: asArray(row.included),
+  excluded: asArray(row.excluded),
+  assumptionsNote: row.assumptions_note ?? "",
+  notes: row.notes ?? "",
+
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+const lineItemsToRows = (quoteId: string, items: any[]) =>
+  items.map((item, index) => ({
+    quote_id: quoteId,
+    // Taken from array order, not from the client's own position field, so a
+    // reordered list always round-trips in the order the user left it.
+    position: index,
+    service_name: text(item?.serviceName),
+    description: text(item?.description),
+    quantity: roundMoney(num(item?.quantity)),
+    unit_price: roundMoney(num(item?.unitPrice)),
+    // id is omitted on purpose: the column is a uuid with a default, and the
+    // client's newId() values are not uuids.
+  }));
+
+// Get all quotes, newest first, each with its line items
+app.get("/make-server-3c030652/quotes", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+
+    const { data, error } = await supabase
+      .from("quotes")
+      .select(QUOTE_SELECT)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching quotes:", error);
+      return c.json({ error: "Failed to fetch quotes" }, 500);
+    }
+
+    return c.json({ quotes: (data || []).map(rowToQuote) });
+  } catch (error) {
+    console.error("Error fetching quotes:", error);
+    return c.json({ error: "Failed to fetch quotes" }, 500);
+  }
+});
+
+// Get a single quote with its line items
+app.get("/make-server-3c030652/quotes/:id", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+
+    // A non-uuid id cannot match any row; answering 404 keeps Postgres from
+    // raising a cast error we would have to report as a 500.
+    if (!UUID_RE.test(id)) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    const { data, error } = await supabase
+      .from("quotes")
+      .select(QUOTE_SELECT)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching quote:", error);
+      return c.json({ error: "Failed to fetch quote" }, 500);
+    }
+
+    if (!data) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    return c.json({ quote: rowToQuote(data) });
+  } catch (error) {
+    console.error("Error fetching quote:", error);
+    return c.json({ error: "Failed to fetch quote" }, 500);
+  }
+});
+
+// Create a quote
+app.post("/make-server-3c030652/quotes", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+    const body = readQuoteBody(await c.req.json());
+
+    const invalid = validateQuoteBody(body);
+    if (invalid) {
+      return c.json({ error: invalid }, 400);
+    }
+
+    const totals = computeQuoteTotals(body);
+
+    const { data: quoteRow, error: insertError } = await supabase
+      .from("quotes")
+      .insert({
+        ...quoteToRow(body, totals),
+        user_id: userId,
+        created_by_email: c.get("userEmail") ?? null,
+      })
+      .select("*")
+      .single();
+
+    if (insertError || !quoteRow) {
+      if (isDuplicateQuoteNumber(insertError)) {
+        return c.json(
+          {
+            error: `Quote number ${text(body.quoteNumber).trim()} is already in use. Choose a different number.`,
+          },
+          409,
+        );
+      }
+      console.error("Error creating quote:", insertError);
+      return c.json({ error: "Failed to create quote" }, 500);
+    }
+
+    const itemRows = lineItemsToRows(quoteRow.id, asArray(body.lineItems));
+    let savedItems: any[] = [];
+
+    if (itemRows.length > 0) {
+      const { data: inserted, error: itemsError } = await supabase
+        .from("quote_line_items")
+        .insert(itemRows)
+        .select();
+
+      if (itemsError) {
+        console.error("Error creating quote line items:", itemsError);
+        // Roll back so a quote never exists with a total but no rows to
+        // explain it.
+        const { error: rollbackError } = await supabase
+          .from("quotes")
+          .delete()
+          .eq("id", quoteRow.id)
+          .eq("user_id", userId);
+        if (rollbackError) {
+          console.error("Error rolling back quote after line item failure:", rollbackError);
+        }
+        return c.json(
+          { error: "The line items could not be saved, so the quote was not created." },
+          500,
+        );
+      }
+
+      savedItems = inserted || [];
+    }
+
+    return c.json({ quote: rowToQuote({ ...quoteRow, quote_line_items: savedItems }) });
+  } catch (error) {
+    console.error("Error creating quote:", error);
+    return c.json({ error: "Failed to create quote" }, 500);
+  }
+});
+
+// Update a quote
+app.put("/make-server-3c030652/quotes/:id", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+    const body = readQuoteBody(await c.req.json());
+
+    if (!UUID_RE.test(id)) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    const invalid = validateQuoteBody(body);
+    if (invalid) {
+      return c.json({ error: invalid }, 400);
+    }
+
+    const totals = computeQuoteTotals(body);
+
+    // The user_id filter is the ownership check: another user's quote simply
+    // matches no row, and updated_at is refreshed by the table's trigger.
+    const { data: updatedRows, error: updateError } = await supabase
+      .from("quotes")
+      .update(quoteToRow(body, totals))
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("*");
+
+    if (updateError) {
+      if (isDuplicateQuoteNumber(updateError)) {
+        return c.json(
+          {
+            error: `Quote number ${text(body.quoteNumber).trim()} is already in use. Choose a different number.`,
+          },
+          409,
+        );
+      }
+      console.error("Error updating quote:", updateError);
+      return c.json({ error: "Failed to update quote" }, 500);
+    }
+
+    const quoteRow = (updatedRows || [])[0];
+    if (!quoteRow) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    // Line items are replaced wholesale: positions shift, rows are added and
+    // removed, and diffing them buys nothing.
+    const { error: deleteError } = await supabase
+      .from("quote_line_items")
+      .delete()
+      .eq("quote_id", id);
+
+    if (deleteError) {
+      console.error("Error clearing quote line items:", deleteError);
+      return c.json(
+        { error: "The quote was saved but its line items were not saved. Try saving again." },
+        500,
+      );
+    }
+
+    const itemRows = lineItemsToRows(id, asArray(body.lineItems));
+    let savedItems: any[] = [];
+
+    if (itemRows.length > 0) {
+      const { data: inserted, error: itemsError } = await supabase
+        .from("quote_line_items")
+        .insert(itemRows)
+        .select();
+
+      if (itemsError) {
+        // The old rows are already gone, so say so plainly rather than
+        // returning a quote whose line items silently vanished.
+        console.error("Error replacing quote line items:", itemsError);
+        return c.json(
+          {
+            error:
+              "The quote was saved but its line items were not saved — the previous line items have been cleared. Re-enter them and save again.",
+          },
+          500,
+        );
+      }
+
+      savedItems = inserted || [];
+    }
+
+    return c.json({ quote: rowToQuote({ ...quoteRow, quote_line_items: savedItems }) });
+  } catch (error) {
+    console.error("Error updating quote:", error);
+    return c.json({ error: "Failed to update quote" }, 500);
+  }
+});
+
+// Delete a quote (line items cascade)
+app.delete("/make-server-3c030652/quotes/:id", requireAuth, async (c) => {
+  try {
+    const userId = c.get("userId");
+    const id = c.req.param("id");
+
+    if (!UUID_RE.test(id)) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    const { data, error } = await supabase
+      .from("quotes")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId)
+      .select("id");
+
+    if (error) {
+      console.error("Error deleting quote:", error);
+      return c.json({ error: "Failed to delete quote" }, 500);
+    }
+
+    if (!data || data.length === 0) {
+      return c.json({ error: "Quote not found" }, 404);
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting quote:", error);
+    return c.json({ error: "Failed to delete quote" }, 500);
   }
 });
 
