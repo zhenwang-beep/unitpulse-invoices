@@ -492,7 +492,7 @@ export default function InvoiceManagement() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#F4F4F5] text-[#71717B] border-b border-[#E4E4E7]">
+                <thead className="bg-[#F4F4F5] text-[#52525C] border-b border-[#E4E4E7]">
                   <tr>
                     {["Invoice ID", "Client", "Issue Date", "Due Date", "Created By", "Total", "Actions"].map((h, i) => (
                       <th
@@ -508,15 +508,15 @@ export default function InvoiceManagement() {
                     <tr
                       key={invoice.id}
                       onClick={() => editInvoice(invoice)}
-                      className={`cursor-pointer hover:bg-[#E8F4F0] transition-colors ${index % 2 === 0 ? "bg-white" : "bg-[#FAFAFA]"}`}
+                      className={`group cursor-pointer hover:bg-[#E8F4F0] transition-colors ${index % 2 === 0 ? "bg-white" : "bg-[#FAFAFA]"}`}
                     >
                       <td className="px-6 py-4 font-medium text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.invoiceId}</td>
                       <td className="px-6 py-4 text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.clientName || "—"}</td>
-                      <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.issueDate || "—"}</td>
-                      <td className="px-6 py-4 text-sm text-[#71717B]" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.dueDate || "—"}</td>
+                      <td className="px-6 py-4 text-sm text-[#71717B] group-hover:text-[#52525C]" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.issueDate || "—"}</td>
+                      <td className="px-6 py-4 text-sm text-[#71717B] group-hover:text-[#52525C]" style={{ fontFamily: "Manrope, sans-serif" }}>{invoice.dueDate || "—"}</td>
                       <td className="px-6 py-4 text-sm" style={{ fontFamily: "Manrope, sans-serif" }}>
                         <div className="text-[#18181B] text-xs truncate max-w-[140px]">{invoice.createdByEmail || "—"}</div>
-                        <div className="text-xs text-[#71717B] mt-0.5">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "—"}</div>
+                        <div className="text-xs text-[#71717B] group-hover:text-[#52525C] mt-0.5">{invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString() : "—"}</div>
                       </td>
                       <td className="px-6 py-4 text-right font-semibold text-sm text-[#006045]" style={{ fontFamily: "Manrope, sans-serif" }}>
                         ${invoice.total?.toFixed(2) || "0.00"}

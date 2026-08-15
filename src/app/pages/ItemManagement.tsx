@@ -183,7 +183,7 @@ export default function ItemManagement() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="p-3 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer"
+                className="p-3 border border-[#E4E4E7] rounded-lg hover:bg-[#F4F4F5] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -233,7 +233,7 @@ export default function ItemManagement() {
           <div className="bg-white rounded-lg border border-[#E4E4E7] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#F4F4F5] text-[#71717B] border-b border-[#E4E4E7]">
+                <thead className="bg-[#F4F4F5] text-[#52525C] border-b border-[#E4E4E7]">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ fontFamily: "Manrope, sans-serif" }}>
                       Description
@@ -289,13 +289,13 @@ export default function ItemManagement() {
                               <button onClick={handleUpdateItem} className="p-2 text-[#006045] hover:bg-[#E8F4F0] rounded-lg transition-colors cursor-pointer" title="Save">
                                 <Save className="w-4 h-4" />
                               </button>
-                              <button onClick={cancelEdit} className="p-2 text-[#71717B] hover:bg-[#FAFAFA] rounded-lg transition-colors cursor-pointer" title="Cancel">
+                              <button onClick={cancelEdit} className="p-2 text-[#71717B] hover:bg-[#F4F4F5] rounded-lg transition-colors cursor-pointer" title="Cancel">
                                 <X className="w-4 h-4" />
                               </button>
                             </>
                           ) : (
                             <>
-                              <button onClick={() => startEdit(item)} className="p-2 text-[#71717B] hover:bg-[#FAFAFA] rounded-lg transition-colors cursor-pointer" title="Edit">
+                              <button onClick={() => startEdit(item)} className="p-2 text-[#71717B] hover:bg-[#F4F4F5] rounded-lg transition-colors cursor-pointer" title="Edit">
                                 <Pencil className="w-4 h-4" />
                               </button>
                               <button onClick={() => handleDeleteItem(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Delete">

@@ -173,7 +173,7 @@ export default function ClientManagement() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="p-3 border border-[#E4E4E7] rounded-lg hover:bg-[#FAFAFA] transition-colors cursor-pointer"
+                className="p-3 border border-[#E4E4E7] rounded-lg hover:bg-[#F4F4F5] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -223,7 +223,7 @@ export default function ClientManagement() {
           <div className="bg-white rounded-lg border border-[#E4E4E7] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#F4F4F5] text-[#71717B] border-b border-[#E4E4E7]">
+                <thead className="bg-[#F4F4F5] text-[#52525C] border-b border-[#E4E4E7]">
                   <tr>
                     {["Client Name", "Address", "City", "State", "Zip", "Actions"].map((h, i) => (
                       <th
@@ -257,7 +257,7 @@ export default function ClientManagement() {
                               <button onClick={() => saveClient(editingClient)} className="p-2 text-[#006045] hover:bg-[#E8F4F0] rounded transition-colors cursor-pointer" title="Save">
                                 <Check className="w-4 h-4" />
                               </button>
-                              <button onClick={() => setEditingClient(null)} className="p-2 text-[#71717B] hover:bg-[#FAFAFA] rounded transition-colors cursor-pointer" title="Cancel">
+                              <button onClick={() => setEditingClient(null)} className="p-2 text-[#71717B] hover:bg-[#F4F4F5] rounded transition-colors cursor-pointer" title="Cancel">
                                 <X className="w-4 h-4" />
                               </button>
                             </div>
