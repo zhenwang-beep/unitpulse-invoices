@@ -9,8 +9,14 @@
  * Dates are handled as strict local-midnight `Date`s. Never `new Date(iso)` —
  * that parses yyyy-mm-dd as UTC midnight and renders as the previous day
  * anywhere west of Greenwich, and it silently normalises overflow so
- * "2026-02-31" becomes March 3. See `parseISODate` below, which is a copy of
- * the one in ../types/quote (that module keeps it private).
+ * "2026-02-31" becomes March 3. `parseISODate` from ../types/quote is the one
+ * definition of that parse; this module does not keep its own.
+ *
+ * The popover is portalled to document.body and positioned `fixed`, because
+ * call sites nest these fields inside cards that clip (`overflow-hidden`) or
+ * scroll. An absolutely-positioned popover is clipped by the nearest such
+ * ancestor; a portalled one is not, at the cost of having to track the trigger
+ * on scroll and resize by hand — see `updatePosition`.
  */
 
 import React, {
@@ -22,32 +28,15 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
-import { formatQuoteDate, toISODate } from "../types/quote";
+import { formatQuoteDate, parseISODate, toISODate } from "../types/quote";
 
 const SANS = "Manrope, sans-serif";
 
-const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-/**
- * Parse a strict yyyy-mm-dd into a LOCAL date, or null. Mirrors the private
- * `parseISODate` in ../types/quote — same regex, same round-trip rejection of
- * dates the Date constructor would otherwise normalise into a different day.
- */
-const parseISODate = (iso: string | null | undefined): Date | null => {
-  if (!iso) return null;
-  const m = ISO_DATE.exec(iso.trim());
-  if (!m) return null;
-  const [, ys, ms, ds] = m;
-  const y = Number(ys),
-    mo = Number(ms),
-    d = Number(ds);
-  const dt = new Date(y, mo - 1, d);
-  if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) {
-    return null;
-  }
-  return dt;
-};
+/** Gap between the trigger and the popover, and the minimum viewport inset. */
+const GAP = 8;
+const MARGIN = 8;
 
 /** Local midnight of a Date, so every comparison is day-to-day. */
 const startOfDay = (d: Date): Date =>
@@ -111,8 +100,12 @@ export function DateField({
   const wantsDayFocus = useRef(false);
 
   const [open, setOpen] = useState(false);
-  const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
-  const [align, setAlign] = useState<"left" | "right">("left");
+  /**
+   * Viewport coordinates for the fixed popover. Null on the first render after
+   * opening: the popover has to be in the DOM to be measured, so it renders
+   * hidden, gets measured in a layout effect, and is positioned before paint.
+   */
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
   const selected = parseISODate(value);
   const minDate = parseISODate(min);
@@ -163,18 +156,27 @@ export function DateField({
     const start = clampToRange(startOfDay(selected ?? new Date()));
     setViewYM({ y: start.getFullYear(), m: start.getMonth() });
     setFocusedISO(toISODate(start));
-    setPlacement("bottom");
-    setAlign("left");
+    setPos(null);
     wantsDayFocus.current = true;
     setOpen(true);
   }, [clampToRange, selected]);
 
-  // Outside click. mousedown rather than click so a drag that starts inside
-  // and ends outside does not close the popover.
+  /**
+   * Outside click. mousedown rather than click so a drag that starts inside and
+   * ends outside does not close the popover.
+   *
+   * The popover lives in a portal on document.body, so it is NOT a DOM
+   * descendant of rootRef — testing only rootRef would treat every click on a
+   * day as "outside" and dismiss the popover before the day's own click
+   * handler ran. Both subtrees have to count as inside.
+   */
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (popRef.current?.contains(target)) return;
+      setOpen(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
@@ -191,22 +193,68 @@ export function DateField({
   }, [open, focusedISO]);
 
   /**
-   * Flip above the trigger when the popover would run off the bottom of the
-   * viewport, and right-align it when it would run off the right edge. Runs
-   * before paint, so the popover never renders in the wrong place first.
+   * Anchor the fixed popover to the trigger's current viewport rect: under it
+   * normally, flipped above when there is not enough room below, right-aligned
+   * when it would overrun the right edge, and always inset from the viewport.
    */
-  useLayoutEffect(() => {
-    if (!open) return;
+  const updatePosition = useCallback(() => {
     const trigger = triggerRef.current;
     const pop = popRef.current;
     if (!trigger || !pop) return;
     const t = trigger.getBoundingClientRect();
     const p = pop.getBoundingClientRect();
-    const needed = p.height + 8;
+
+    // A fixed popover does not travel with a scrolled-away trigger, so it would
+    // otherwise hang over unrelated content as an orphan. Close instead.
+    if (
+      t.bottom < 0 ||
+      t.top > window.innerHeight ||
+      t.right < 0 ||
+      t.left > window.innerWidth
+    ) {
+      setOpen(false);
+      return;
+    }
+
     const below = window.innerHeight - t.bottom;
-    setPlacement(below < needed && t.top > below ? "top" : "bottom");
-    setAlign(t.left + p.width > window.innerWidth - 8 ? "right" : "left");
-  }, [open]);
+    const flip = below < p.height + GAP && t.top > below;
+    let top = flip ? t.top - p.height - GAP : t.bottom + GAP;
+    top = Math.max(
+      MARGIN,
+      Math.min(top, window.innerHeight - p.height - MARGIN),
+    );
+
+    let left = t.left;
+    if (left + p.width > window.innerWidth - MARGIN) left = t.right - p.width;
+    left = Math.max(MARGIN, Math.min(left, window.innerWidth - p.width - MARGIN));
+
+    setPos((prev) =>
+      prev && Math.abs(prev.top - top) < 0.5 && Math.abs(prev.left - left) < 0.5
+        ? prev
+        : { top, left },
+    );
+  }, []);
+
+  // Position before paint, so the popover is never seen in the wrong place.
+  useLayoutEffect(() => {
+    if (open) updatePosition();
+  }, [open, updatePosition]);
+
+  /**
+   * Track the trigger while open. The scroll listener is capture-phase so it
+   * fires for scrolls in any ancestor — the editor pane scrolls, not the
+   * window, and a bubble-phase window listener would never hear about it.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const onMove = () => updatePosition();
+    window.addEventListener("scroll", onMove, true);
+    window.addEventListener("resize", onMove);
+    return () => {
+      window.removeEventListener("scroll", onMove, true);
+      window.removeEventListener("resize", onMove);
+    };
+  }, [open, updatePosition]);
 
   /* ---------------------------------------------------------------- */
   /* Selection                                                        */
@@ -234,6 +282,17 @@ export function DateField({
   const onGridKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const cur = parseISODate(focusedISO);
     if (!cur) return;
+
+    // Select explicitly rather than leaning on a button's implicit Enter/Space
+    // activation: these cells carry role="gridcell", and preventing the default
+    // here also stops Space from scrolling the page behind the popover.
+    if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+      if (isOutOfRange(cur)) return;
+      e.preventDefault();
+      select(focusedISO);
+      return;
+    }
+
     let days = 0;
     let months = 0;
     switch (e.key) {
@@ -382,28 +441,30 @@ export function DateField({
         <Calendar size={16} className="shrink-0 text-[#71717B]" aria-hidden="true" />
       </button>
 
-      {open && (
-        <div
-          ref={popRef}
-          role="dialog"
-          aria-label={label ? `${label} — choose a date` : "Choose a date"}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.stopPropagation();
-              e.preventDefault();
-              closeAndRestoreFocus();
-            }
-          }}
-          className={
-            "absolute z-50 w-[288px] bg-white rounded-xl border border-[#E4E4E7] p-3 " +
-            (placement === "bottom" ? "top-full mt-2 " : "bottom-full mb-2 ") +
-            (align === "left" ? "left-0" : "right-0")
-          }
-          style={{
-            fontFamily: SANS,
-            boxShadow: "0 10px 28px -6px rgba(0,0,0,.14)",
-          }}
-        >
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={popRef}
+            role="dialog"
+            aria-label={label ? `${label} — choose a date` : "Choose a date"}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                e.stopPropagation();
+                e.preventDefault();
+                closeAndRestoreFocus();
+              }
+            }}
+            className="fixed z-50 w-[288px] bg-white rounded-xl border border-[#E4E4E7] p-3"
+            style={{
+              fontFamily: SANS,
+              boxShadow: "0 10px 28px -6px rgba(0,0,0,.14)",
+              top: pos?.top ?? 0,
+              left: pos?.left ?? 0,
+              // Hidden for the single render it takes to measure the popover.
+              visibility: pos ? "visible" : "hidden",
+            }}
+          >
           {/* Month header */}
           <div className="flex items-center justify-between pb-2 mb-1 border-b border-[#ECECEE]">
             <button

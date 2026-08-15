@@ -16,6 +16,7 @@ import { QuotePreview, QUOTE_PAGE_W } from "../components/QuotePreview";
 import { fetchAPI } from "../utils/api";
 import { generateQuotePDF } from "../quote-pdf-generator";
 import { resolveLogoBitmap } from "../utils/logoToPng";
+import { DateField } from "../components/DateField";
 import logoPng from "../../assets/logo.svg";
 import type { CompanySettings } from "../App";
 import {
@@ -617,33 +618,45 @@ export default function QuoteGenerator() {
               ))}
             </select>
           </div>
-          <Field
-            label="Quote date"
-            required
-            error={errors.quoteDate}
-            type="date"
-            value={quote.quoteDate}
-            onChange={(v) =>
-              patch({
-                quoteDate: v,
-                // keep the validity window intact when the quote date moves,
-                // so the CHECK (valid_until >= quote_date) can't be violated
-                validUntil: v && quote.validUntil < v ? addDays(v, 30) : quote.validUntil,
-              })
-            }
-          />
-          <Field
-            label="Valid until"
-            required
-            error={errors.validUntil}
-            type="date"
-            value={quote.validUntil}
-            min={quote.quoteDate}
-            onChange={(v) => patch({ validUntil: v })}
-          />
-          <Field
+          <div>
+            <DateField
+              label="Quote date"
+              required
+              invalid={!!errors.quoteDate}
+              value={quote.quoteDate}
+              onChange={(v) =>
+                patch({
+                  quoteDate: v,
+                  // keep the validity window intact when the quote date moves,
+                  // so the CHECK (valid_until >= quote_date) can't be violated
+                  validUntil:
+                    v && quote.validUntil < v ? addDays(v, 30) : quote.validUntil,
+                })
+              }
+            />
+            {errors.quoteDate && (
+              <p className="mt-1 text-xs text-[#C0392F]" style={{ fontFamily: SANS }}>
+                {errors.quoteDate}
+              </p>
+            )}
+          </div>
+          <div>
+            <DateField
+              label="Valid until"
+              required
+              invalid={!!errors.validUntil}
+              value={quote.validUntil}
+              min={quote.quoteDate}
+              onChange={(v) => patch({ validUntil: v })}
+            />
+            {errors.validUntil && (
+              <p className="mt-1 text-xs text-[#C0392F]" style={{ fontFamily: SANS }}>
+                {errors.validUntil}
+              </p>
+            )}
+          </div>
+          <DateField
             label="Service start date"
-            type="date"
             value={quote.serviceStartDate}
             onChange={(v) => patch({ serviceStartDate: v })}
           />

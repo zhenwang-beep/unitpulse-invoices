@@ -224,7 +224,7 @@ const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
  * silently normalises overflow, so "2026-02-31" would become March 3 — the
  * round-trip check below rejects it instead of inventing a date.
  */
-const parseISODate = (iso: string | null | undefined): Date | null => {
+export const parseISODate = (iso: string | null | undefined): Date | null => {
   if (!iso) return null;
   const m = ISO_DATE.exec(iso.trim());
   if (!m) return null;

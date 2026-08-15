@@ -14,6 +14,7 @@ import {
   Download,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import { DateField } from "./components/DateField";
 import { useNavigate, useLocation } from "react-router";
 import Logo from "../imports/Logo-4-122";
 import logoPng from "../assets/logo.svg";
@@ -1133,45 +1134,23 @@ function FormEditor({
             </div>
           </div>
 
+          {/* Same picker as the quote form — one calendar across the app. */}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label
-                className="block text-[#71717B] text-sm mb-1.5"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              >
-                Issue Date
-              </label>
-              <input
-                type="date"
-                value={invoiceData.issueDate}
-                onChange={(e) => {
-                  const newIssueDate = e.target.value;
-                  updateInvoice({ 
-                    issueDate: newIssueDate,
-                    dueDate: getDueDateFromIssueDate(newIssueDate)
-                  });
-                }}
-                className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              />
-            </div>
-            <div>
-              <label
-                className="block text-[#71717B] text-sm mb-1.5"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              >
-                Due Date
-              </label>
-              <input
-                type="date"
-                value={invoiceData.dueDate}
-                onChange={(e) =>
-                  updateInvoice({ dueDate: e.target.value })
-                }
-                className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#006045] focus:border-transparent"
-                style={{ fontFamily: "Manrope, sans-serif" }}
-              />
-            </div>
+            <DateField
+              label="Issue Date"
+              value={invoiceData.issueDate}
+              onChange={(v) =>
+                updateInvoice({
+                  issueDate: v,
+                  dueDate: getDueDateFromIssueDate(v),
+                })
+              }
+            />
+            <DateField
+              label="Due Date"
+              value={invoiceData.dueDate}
+              onChange={(v) => updateInvoice({ dueDate: v })}
+            />
           </div>
         </div>
       </section>
