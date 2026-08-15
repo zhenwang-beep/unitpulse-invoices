@@ -182,15 +182,23 @@ export function DateField({
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  // Move real focus onto the focused day (roving tabindex), but only when the
-  // interaction asked for it.
+  /**
+   * Move real focus onto the focused day (roving tabindex), but only when the
+   * interaction asked for it.
+   *
+   * Gated on `pos` because the popover spends its first render at
+   * `visibility: hidden` while it is measured, and a hidden element cannot take
+   * focus — running this before positioning would silently no-op and consume
+   * the flag, leaving the keyboard user stranded on the trigger. `preventScroll`
+   * keeps a fixed popover from scrolling the pane behind it.
+   */
   useEffect(() => {
-    if (!open || !wantsDayFocus.current) return;
+    if (!open || !pos || !wantsDayFocus.current) return;
     wantsDayFocus.current = false;
     gridRef.current
       ?.querySelector<HTMLButtonElement>(`[data-iso="${focusedISO}"]`)
-      ?.focus();
-  }, [open, focusedISO]);
+      ?.focus({ preventScroll: true });
+  }, [open, pos, focusedISO]);
 
   /**
    * Anchor the fixed popover to the trigger's current viewport rect: under it
@@ -585,8 +593,9 @@ export function DateField({
               Clear
             </button>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
