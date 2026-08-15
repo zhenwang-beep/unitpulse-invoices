@@ -741,10 +741,23 @@ export async function generateQuotePDF(
       const blockBottom = brokeInside
         ? bulletY + 3
         : Math.max(groupTop + leftH, bulletY + 3);
-      yPos = blockBottom + 12;
+
+      // jsPDF positions text by its BASELINE, so a group's first line extends
+      // upward from groupTop by the ascender (~0.75em, i.e. ~7.5pt at size 10).
+      // The divider previously sat 6pt above the next baseline and was struck
+      // straight through that line. Reserve the full ascender plus clearance.
+      const GROUP_GAP = 26;      // baseline-to-baseline gap between groups
+      const RULE_OFFSET = 11;    // rule sits in the gap, clear of both blocks
       if (gi < groups.length - 1) {
-        drawLine(margin, yPos - 6, contentRight, yPos - 6, BORDER_HAIRLINE);
+        drawLine(
+          margin,
+          blockBottom + RULE_OFFSET,
+          contentRight,
+          blockBottom + RULE_OFFSET,
+          BORDER_HAIRLINE,
+        );
       }
+      yPos = blockBottom + GROUP_GAP;
     });
 
     const approvalH = 14;
