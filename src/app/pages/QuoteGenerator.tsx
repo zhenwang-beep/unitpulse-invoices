@@ -351,10 +351,6 @@ export default function QuoteGenerator() {
       toast.error("Add a client name before saving");
       return;
     }
-    if (!quote.quoteNumber.trim()) {
-      toast.error("A quote number is required");
-      return;
-    }
     if (quote.validUntil < quote.quoteDate) {
       toast.error("“Valid until” cannot be before the quote date");
       return;
@@ -420,11 +416,16 @@ export default function QuoteGenerator() {
     <div className="space-y-4">
       <Section title="Quote details" eyebrow="Header" defaultOpen>
         <div className="grid grid-cols-2 gap-4">
-          <Field
-            label="Quote number"
-            value={quote.quoteNumber}
-            onChange={(v) => patch({ quoteNumber: v })}
-          />
+          <div>
+            <Label>Quote number</Label>
+            <div
+              className="w-full px-4 py-2.5 border border-[#E4E4E7] rounded-lg bg-[#F4F4F5] text-[#52525C]"
+              style={{ fontFamily: SANS }}
+              aria-label="Quote number"
+            >
+              {quote.quoteNumber || "Assigned on save"}
+            </div>
+          </div>
           <div>
             <Label>Status</Label>
             <select
@@ -922,21 +923,30 @@ function ScaledPreview({
     return () => ro.disconnect();
   });
 
+  // `justify-center` cannot centre this: the child is a fixed 816px, so when the
+  // panel is narrower flexbox centres the UNSCALED box and half of it hangs off
+  // the left edge — scaling from top-left then leaves it there. Instead the
+  // middle element is sized to the SCALED result and centred with margin auto,
+  // and the transform happens inside it.
   return (
-    <div
-      ref={wrapRef}
-      className="w-full flex justify-center"
-      style={{ height: Math.ceil(height * scale) }}
-    >
+    <div ref={wrapRef} className="w-full">
       <div
         style={{
-          width: QUOTE_PAGE_W,
-          transformOrigin: "top left",
-          transform: `scale(${scale})`,
-          flexShrink: 0,
+          width: Math.floor(QUOTE_PAGE_W * scale),
+          height: Math.ceil(height * scale),
+          margin: "0 auto",
+          overflow: "hidden",
         }}
       >
-        <QuotePreview ref={docRef} quote={quote} companySettings={companySettings} />
+        <div
+          style={{
+            width: QUOTE_PAGE_W,
+            transformOrigin: "top left",
+            transform: `scale(${scale})`,
+          }}
+        >
+          <QuotePreview ref={docRef} quote={quote} companySettings={companySettings} />
+        </div>
       </div>
     </div>
   );

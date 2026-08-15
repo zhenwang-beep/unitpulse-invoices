@@ -670,10 +670,16 @@ app.delete("/make-server-3c030652/invoices/:id", requireAuth, async (c) => {
 //   1. user_id comes from the verified JWT, never from the request body, and
 //      every by-id query filters on BOTH id AND user_id, so one account can
 //      never read or mutate another's quote. Nothing matched means 404.
-//   2. subtotal and total_monthly are recomputed here from the submitted line
-//      items. A client-sent total is never persisted — it can disagree with
-//      the client's own rows, and this stored figure is what the PDF and the
-//      accepted quote are read from.
+//   2. Writes go through public.save_quote and nowhere else. That function
+//      saves the parent row, replaces the line items and sums the totals in a
+//      single transaction, so a failed line-item write can never leave a quote
+//      whose previous items were already deleted. It also owns the money: a
+//      client-sent subtotal or total is ignored in favour of a Postgres
+//      numeric sum of the rows actually stored, which is the arithmetic the
+//      generated `amount` column uses too.
+//
+// Validation still lives here — the messages have to name the offending field
+// for the person filling in the form. Only the write moved to the database.
 // ===========================================================================
 
 const QUOTE_STATUSES = ["draft", "sent", "accepted", "declined", "expired"];
@@ -685,20 +691,16 @@ const QUOTE_SELECT = "*, quote_line_items(*)";
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Money, mirroring the helpers in src/app/types/quote.ts (which this file
-// cannot import). Each amount is rounded at the point of computation so the
-// stored row, the preview and the PDF agree to the cent.
-const roundMoney = (n: number): number =>
-  Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
-
+// JSON hands numbers over as either numbers or strings; this is the single
+// coercion used by validation and by the RPC payload.
+//
+// Nothing here rounds or sums money. save_quote does that in Postgres numeric,
+// and JavaScript's binary floating point disagrees with it: 0.01 * 14.50 is
+// 0.145 in JS, which rounds to 0.14, while numeric rounds the same product to
+// 0.15. Rounding here first would have made the stored subtotal differ from
+// the generated `amount` column by a cent.
 const num = (v: any): number =>
   v === null || v === undefined || v === "" ? 0 : Number(v);
-
-const lineAmount = (item: any): number =>
-  roundMoney((num(item?.quantity) || 0) * (num(item?.unitPrice) || 0));
-
-const quoteSubtotal = (items: any[]): number =>
-  roundMoney(items.reduce((sum, item) => sum + lineAmount(item), 0));
 
 const text = (v: any): string => (v === null || v === undefined ? "" : String(v));
 
@@ -720,6 +722,22 @@ const isISODate = (v: any): boolean => {
 // Postgres cannot cast "" to date; an unset optional date must be null.
 const dateOrNull = (v: any): string | null => (isISODate(v) ? v : null);
 
+// Expiry is derived from valid_until, never stored — storing 'expired' would
+// give two sources of truth that drift the moment a date passes with no job
+// running. This is the JS twin of public.quote_effective_status in the
+// migration, and the single definition used by every read path here.
+const todayISO = (): string => new Date().toISOString().slice(0, 10);
+
+const effectiveQuoteStatus = (status: any, validUntil: any): string => {
+  const current = text(status) || "draft";
+  const until = text(validUntil);
+  return (current === "draft" || current === "sent") &&
+    isISODate(until) &&
+    until < todayISO()
+    ? "expired"
+    : current;
+};
+
 // quotes_term_positive allows NULL or a positive integer, so 0, "" and
 // negatives all mean "no fixed term".
 const initialTermOrNull = (v: any): number | null => {
@@ -727,8 +745,15 @@ const initialTermOrNull = (v: any): number | null => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
+// save_quote reports both of its expected failures as SQLSTATEs, which
+// PostgREST passes through as error.code.
+//
 // The UNIQUE (user_id, quote_number) constraint surfaces as Postgres 23505.
 const isDuplicateQuoteNumber = (error: any): boolean => error?.code === "23505";
+
+// save_quote raises P0002 when the id it was asked to update is not owned by
+// the caller — the same "nothing matched means 404" rule the read paths use.
+const isMissingQuote = (error: any): boolean => error?.code === "P0002";
 
 /**
  * The quote editor posts the document wrapped as { quote }, the same shape the
@@ -749,7 +774,9 @@ const readQuoteBody = (raw: any): any =>
 const validateQuoteBody = (body: any): string | null => {
   if (!body || typeof body !== "object") return "A quote object is required.";
 
-  if (!text(body.quoteNumber).trim()) return "Quote number is required.";
+  // An empty quote number is legal: save_quote allocates the next one for
+  // this user and year and retries on collision. Only a number the user
+  // actually typed is held to uniqueness.
 
   const status = text(body.status) || "draft";
   if (!QUOTE_STATUSES.includes(status)) {
@@ -801,26 +828,17 @@ const validateQuoteBody = (body: any): string | null => {
   return null;
 };
 
-// Totals are derived here and nowhere else.
-const computeQuoteTotals = (body: any) => {
-  const subtotal = quoteSubtotal(asArray(body.lineItems));
-  const setupFee = roundMoney(num(body.setupFee));
-  return { subtotal, setupFee, totalMonthly: roundMoney(subtotal + setupFee) };
-};
-
 // ---------------------------------------------------------------------------
 // The one place quote field names are translated. camelCase is the TS side
 // (src/app/types/quote.ts); snake_case is Postgres.
 //
 // user_id and created_by_email are deliberately absent from quoteToRow:
 // ownership is stamped from the JWT at the call site so a body can never
-// claim it.
+// claim it. subtotal and total_monthly are absent for the same reason —
+// save_quote sums them from the line items it is storing.
 // ---------------------------------------------------------------------------
 
-const quoteToRow = (
-  body: any,
-  totals: { subtotal: number; setupFee: number; totalMonthly: number },
-) => ({
+const quoteToRow = (body: any) => ({
   quote_number: text(body.quoteNumber).trim(),
   status: text(body.status) || "draft",
 
@@ -854,11 +872,11 @@ const quoteToRow = (
   price_change_terms: text(body.priceChangeTerms),
   quote_validity_terms: text(body.quoteValidityTerms),
 
-  // Section 01 — server-computed, never taken from the body
+  // Section 01. The one-time fee is a stated amount, so it comes from the body
+  // (validated non-negative above and rounded by save_quote); subtotal and
+  // total_monthly are derived and are not sent at all.
   currency: text(body.currency).trim() || "USD",
-  subtotal: totals.subtotal,
-  setup_fee: totals.setupFee,
-  total_monthly: totals.totalMonthly,
+  setup_fee: num(body.setupFee),
 
   // Sections 02 & 04
   scope_groups: asArray(body.scopeGroups),
@@ -886,6 +904,11 @@ const rowToQuote = (row: any) => ({
 
   quoteNumber: row.quote_number,
   status: row.status,
+  // Derived, never stored. save_quote returns it precomputed; the read paths
+  // fall back to the identical rule in effectiveQuoteStatus.
+  effectiveStatus:
+    text(row.effective_status) ||
+    effectiveQuoteStatus(row.status, row.valid_until),
 
   clientName: row.client_name ?? "",
   clientContactName: row.client_contact_name ?? "",
@@ -917,9 +940,13 @@ const rowToQuote = (row: any) => ({
   quoteValidityTerms: row.quote_validity_terms ?? "",
 
   currency: row.currency ?? "USD",
+  // Two shapes reach this mapper: the PostgREST embed nests the items under
+  // quote_line_items, save_quote returns them under line_items. The rows
+  // themselves are identical either way.
+  //
   // Sorted here rather than in the query so the order does not depend on the
   // embedded-resource ordering syntax of a particular client version.
-  lineItems: asArray(row.quote_line_items)
+  lineItems: asArray(row.quote_line_items ?? row.line_items)
     .slice()
     .sort((a: any, b: any) => (Number(a?.position) || 0) - (Number(b?.position) || 0))
     .map(rowToLineItem),
@@ -939,19 +966,68 @@ const rowToQuote = (row: any) => ({
   updatedAt: row.updated_at,
 });
 
-const lineItemsToRows = (quoteId: string, items: any[]) =>
-  items.map((item, index) => ({
-    quote_id: quoteId,
-    // Taken from array order, not from the client's own position field, so a
-    // reordered list always round-trips in the order the user left it.
-    position: index,
+// The line items as save_quote wants them.
+//
+// quote_id and position are omitted: the function fills both in, taking
+// position from the array's ordinality, so a reordered list still round-trips
+// in the order the user left it. id is omitted too — the column is a uuid with
+// a default, and the client's newId() values are not uuids.
+const quoteItemsToJson = (items: any[]) =>
+  items.map((item) => ({
     service_name: text(item?.serviceName),
     description: text(item?.description),
-    quantity: roundMoney(num(item?.quantity)),
-    unit_price: roundMoney(num(item?.unitPrice)),
-    // id is omitted on purpose: the column is a uuid with a default, and the
-    // client's newId() values are not uuids.
+    quantity: num(item?.quantity),
+    unit_price: num(item?.unitPrice),
   }));
+
+/**
+ * The single write path for a quote and its lines.
+ *
+ * p_quote_id is null to create and the row id to update. On an update the
+ * function itself checks ownership and raises P0002 when the id belongs to
+ * someone else, so there is no separate lookup to race against.
+ */
+const saveQuote = async (
+  userId: string,
+  email: any,
+  body: any,
+  quoteId: string | null,
+) =>
+  await supabase.rpc("save_quote", {
+    p_user_id: userId,
+    p_email: email ?? null,
+    p_quote: quoteToRow(body),
+    p_items: quoteItemsToJson(asArray(body.lineItems)),
+    p_quote_id: quoteId,
+  });
+
+/**
+ * Turns a save_quote failure into the status and message to send back. The two
+ * expected SQLSTATEs get specific answers; anything else is a real fault, so
+ * its message is logged and the caller is told only that the save failed.
+ */
+const saveQuoteFailure = (
+  error: any,
+  quoteNumber: string,
+  failureMessage: string,
+): { body: { error: string }; status: 404 | 409 | 500 } => {
+  if (isDuplicateQuoteNumber(error)) {
+    return {
+      body: {
+        error: `Quote number ${quoteNumber} is already in use. Choose a different number.`,
+      },
+      status: 409,
+    };
+  }
+  if (isMissingQuote(error)) {
+    return { body: { error: "Quote not found" }, status: 404 };
+  }
+  console.error(
+    `${failureMessage}:`,
+    error?.message ?? error ?? "save_quote returned no row",
+  );
+  return { body: { error: failureMessage }, status: 500 };
+};
 
 // Get all quotes, newest first, each with its line items
 app.get("/make-server-3c030652/quotes", requireAuth, async (c) => {
@@ -1022,62 +1098,25 @@ app.post("/make-server-3c030652/quotes", requireAuth, async (c) => {
       return c.json({ error: invalid }, 400);
     }
 
-    const totals = computeQuoteTotals(body);
+    // One transaction: the row and its line items either both exist or
+    // neither does, so there is no half-created quote to roll back by hand.
+    const { data, error } = await saveQuote(
+      userId,
+      c.get("userEmail"),
+      body,
+      null,
+    );
 
-    const { data: quoteRow, error: insertError } = await supabase
-      .from("quotes")
-      .insert({
-        ...quoteToRow(body, totals),
-        user_id: userId,
-        created_by_email: c.get("userEmail") ?? null,
-      })
-      .select("*")
-      .single();
-
-    if (insertError || !quoteRow) {
-      if (isDuplicateQuoteNumber(insertError)) {
-        return c.json(
-          {
-            error: `Quote number ${text(body.quoteNumber).trim()} is already in use. Choose a different number.`,
-          },
-          409,
-        );
-      }
-      console.error("Error creating quote:", insertError);
-      return c.json({ error: "Failed to create quote" }, 500);
+    if (error || !data) {
+      const failure = saveQuoteFailure(
+        error,
+        text(body.quoteNumber).trim(),
+        "Failed to create quote",
+      );
+      return c.json(failure.body, failure.status);
     }
 
-    const itemRows = lineItemsToRows(quoteRow.id, asArray(body.lineItems));
-    let savedItems: any[] = [];
-
-    if (itemRows.length > 0) {
-      const { data: inserted, error: itemsError } = await supabase
-        .from("quote_line_items")
-        .insert(itemRows)
-        .select();
-
-      if (itemsError) {
-        console.error("Error creating quote line items:", itemsError);
-        // Roll back so a quote never exists with a total but no rows to
-        // explain it.
-        const { error: rollbackError } = await supabase
-          .from("quotes")
-          .delete()
-          .eq("id", quoteRow.id)
-          .eq("user_id", userId);
-        if (rollbackError) {
-          console.error("Error rolling back quote after line item failure:", rollbackError);
-        }
-        return c.json(
-          { error: "The line items could not be saved, so the quote was not created." },
-          500,
-        );
-      }
-
-      savedItems = inserted || [];
-    }
-
-    return c.json({ quote: rowToQuote({ ...quoteRow, quote_line_items: savedItems }) });
+    return c.json({ quote: rowToQuote(data) });
   } catch (error) {
     console.error("Error creating quote:", error);
     return c.json({ error: "Failed to create quote" }, 500);
@@ -1100,76 +1139,29 @@ app.put("/make-server-3c030652/quotes/:id", requireAuth, async (c) => {
       return c.json({ error: invalid }, 400);
     }
 
-    const totals = computeQuoteTotals(body);
+    // Line items are replaced wholesale — positions shift, rows are added and
+    // removed, and diffing them buys nothing — but the replacement happens
+    // inside save_quote's transaction. If the insert raises, the delete rolls
+    // back with it and the previous items are still there. The ownership check
+    // is the function's own: an id belonging to another account raises P0002,
+    // which maps to the same 404 the read paths return.
+    const { data, error } = await saveQuote(
+      userId,
+      c.get("userEmail"),
+      body,
+      id,
+    );
 
-    // The user_id filter is the ownership check: another user's quote simply
-    // matches no row, and updated_at is refreshed by the table's trigger.
-    const { data: updatedRows, error: updateError } = await supabase
-      .from("quotes")
-      .update(quoteToRow(body, totals))
-      .eq("id", id)
-      .eq("user_id", userId)
-      .select("*");
-
-    if (updateError) {
-      if (isDuplicateQuoteNumber(updateError)) {
-        return c.json(
-          {
-            error: `Quote number ${text(body.quoteNumber).trim()} is already in use. Choose a different number.`,
-          },
-          409,
-        );
-      }
-      console.error("Error updating quote:", updateError);
-      return c.json({ error: "Failed to update quote" }, 500);
-    }
-
-    const quoteRow = (updatedRows || [])[0];
-    if (!quoteRow) {
-      return c.json({ error: "Quote not found" }, 404);
-    }
-
-    // Line items are replaced wholesale: positions shift, rows are added and
-    // removed, and diffing them buys nothing.
-    const { error: deleteError } = await supabase
-      .from("quote_line_items")
-      .delete()
-      .eq("quote_id", id);
-
-    if (deleteError) {
-      console.error("Error clearing quote line items:", deleteError);
-      return c.json(
-        { error: "The quote was saved but its line items were not saved. Try saving again." },
-        500,
+    if (error || !data) {
+      const failure = saveQuoteFailure(
+        error,
+        text(body.quoteNumber).trim(),
+        "Failed to update quote",
       );
+      return c.json(failure.body, failure.status);
     }
 
-    const itemRows = lineItemsToRows(id, asArray(body.lineItems));
-    let savedItems: any[] = [];
-
-    if (itemRows.length > 0) {
-      const { data: inserted, error: itemsError } = await supabase
-        .from("quote_line_items")
-        .insert(itemRows)
-        .select();
-
-      if (itemsError) {
-        // The old rows are already gone, so say so plainly rather than
-        // returning a quote whose line items silently vanished.
-        console.error("Error replacing quote line items:", itemsError);
-        return c.json(
-          {
-            error:
-              "The quote was saved but its line items were not saved — the previous line items have been cleared. Re-enter them and save again.",
-          },
-          500,
-        );
-      }
-
-      savedItems = inserted || [];
-    }
-
-    return c.json({ quote: rowToQuote({ ...quoteRow, quote_line_items: savedItems }) });
+    return c.json({ quote: rowToQuote(data) });
   } catch (error) {
     console.error("Error updating quote:", error);
     return c.json({ error: "Failed to update quote" }, 500);

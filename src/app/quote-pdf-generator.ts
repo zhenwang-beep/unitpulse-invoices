@@ -461,20 +461,19 @@ export function generateQuotePDF(
     drawLine(margin, yPos, contentRight, yPos, BORDER_HAIRLINE);
     yPos += 16;
 
+    // Eyebrow above the value, stacked — matches QuotePreview, and keeps a long
+    // date from colliding with the adjacent column.
     const datePair = (label: string, value: string, x: number) => {
-      addText(label, x, yPos, { size: 8.5, color: TEXT_MUTED });
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8.5);
-      const labelW = pdf.getTextWidth(`${label}  `);
-      addText(value, x + labelW, yPos, {
-        size: 8.5,
+      eyebrow(label, x, yPos);
+      addText(value, x, yPos + 14, {
+        size: 9,
         style: "bold",
         color: TEXT_PRIMARY,
       });
     };
     datePair("Quote date", formatQuoteDate(quote.quoteDate), leftX);
     datePair("Valid until", formatQuoteDate(quote.validUntil), rightX);
-    yPos += 34;
+    yPos += 46;
   }
 
   // =======================================================================

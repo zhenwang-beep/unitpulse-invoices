@@ -153,3 +153,227 @@ CREATE POLICY quote_line_items_owner_select ON public.quote_line_items
   FOR SELECT
   USING (EXISTS (SELECT 1 FROM public.quotes q
                  WHERE q.id = quote_line_items.quote_id AND q.user_id = auth.uid()));
+
+-- ===========================================================================
+-- Derived money
+--
+-- total_monthly is the RECURRING charge. A one-time setup fee is deliberately
+-- not part of it: folding it in prints "$899 due monthly" for a $399 service
+-- with a $500 setup fee, on a document the client signs. What they actually
+-- pay up front is the first month plus the fee, so that gets its own derived
+-- column rather than being recomputed (differently) by each renderer.
+-- numeric(14,2) because the sum of two numeric(12,2) values can carry an
+-- eleventh integer digit.
+-- ===========================================================================
+ALTER TABLE public.quotes
+  ADD COLUMN IF NOT EXISTS initial_amount_due numeric(14,2)
+  GENERATED ALWAYS AS (total_monthly + setup_fee) STORED;
+
+-- ===========================================================================
+-- Effective status
+--
+-- Expiry is a function of valid_until, not a separate stored fact. Storing
+-- 'expired' would give two sources of truth that drift the moment a date
+-- passes without a job running. One definition, used by the API and the UI.
+-- ===========================================================================
+CREATE OR REPLACE FUNCTION public.quote_effective_status(
+  p_status text,
+  p_valid_until date
+) RETURNS text
+LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $$
+  SELECT CASE
+    WHEN p_status IN ('draft','sent') AND p_valid_until < CURRENT_DATE THEN 'expired'
+    ELSE p_status
+  END;
+$$;
+
+-- ===========================================================================
+-- save_quote — the ONLY write path for a quote and its lines.
+--
+-- Everything here happens in one transaction: a plpgsql function either
+-- commits whole or rolls back whole. The previous edge-function approach
+-- (update parent, DELETE all lines, INSERT replacements) destroyed the old
+-- line items if the insert failed, and there was no way to get them back.
+--
+-- Totals are summed HERE, from the same rows being stored, so a persisted
+-- total can never disagree with its line items — and the arithmetic is
+-- Postgres numeric, not JavaScript binary floating point, so 0.01 * 14.50
+-- rounds the same way in the database as it does in the generated `amount`
+-- column. The client's own subtotal/total fields are ignored entirely.
+-- ===========================================================================
+CREATE OR REPLACE FUNCTION public.save_quote(
+  p_user_id  uuid,
+  p_email    text,
+  p_quote    jsonb,
+  p_items    jsonb,
+  p_quote_id uuid DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+  v_id        uuid;
+  v_subtotal  numeric(12,2);
+  v_setup_fee numeric(12,2);
+  v_number    text;
+  v_supplied  boolean;
+  v_year      text := to_char(CURRENT_DATE, 'YYYY');
+  v_attempt   int;
+  v_result    jsonb;
+BEGIN
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'user id is required' USING ERRCODE = '22023';
+  END IF;
+
+  v_setup_fee := round(COALESCE((p_quote->>'setup_fee')::numeric, 0), 2);
+
+  SELECT COALESCE(SUM(round(
+           COALESCE(NULLIF(it->>'quantity','')::numeric, 0)
+         * COALESCE(NULLIF(it->>'unit_price','')::numeric, 0), 2)), 0)
+    INTO v_subtotal
+    FROM jsonb_array_elements(COALESCE(p_items, '[]'::jsonb)) AS it;
+
+  v_number   := NULLIF(btrim(COALESCE(p_quote->>'quote_number', '')), '');
+  v_supplied := v_number IS NOT NULL;
+
+  -- On an update, the caller must own the row. Filtering on both id and
+  -- user_id means another account's quote simply matches nothing.
+  IF p_quote_id IS NOT NULL THEN
+    PERFORM 1 FROM public.quotes WHERE id = p_quote_id AND user_id = p_user_id;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'quote not found' USING ERRCODE = 'P0002';
+    END IF;
+  END IF;
+
+  -- Browser-side random numbers collide ~42% of the time within 100 quotes,
+  -- so an unspecified number is allocated here and retried on conflict. A
+  -- number the user typed is never silently changed — that 23505 surfaces.
+  FOR v_attempt IN 1..8 LOOP
+    BEGIN
+      IF v_number IS NULL THEN
+        SELECT 'UP-' || v_year || '-' || lpad((COALESCE(MAX(
+                 NULLIF(regexp_replace(quote_number, '^.*-', ''), '')::int), 0)
+                 + v_attempt)::text, 4, '0')
+          INTO v_number
+          FROM public.quotes
+         WHERE user_id = p_user_id
+           AND quote_number ~ ('^UP-' || v_year || '-[0-9]+$');
+      END IF;
+
+      IF p_quote_id IS NULL THEN
+        INSERT INTO public.quotes (
+          user_id, created_by_email, quote_number, status,
+          client_name, client_contact_name, client_contact_title,
+          client_email, client_phone, client_address,
+          issuer_name, issuer_email, issuer_phone,
+          service_line, prepared_for_address,
+          quote_date, valid_until, service_start_date,
+          initial_term_months, renewal_terms, cancellation_terms,
+          billing_cadence, payment_terms, price_change_terms,
+          quote_validity_terms,
+          currency, subtotal, setup_fee, total_monthly,
+          scope_groups, included, excluded, assumptions_note, notes
+        ) VALUES (
+          p_user_id, p_email, v_number,
+          COALESCE(NULLIF(p_quote->>'status',''), 'draft'),
+          COALESCE(p_quote->>'client_name',''),
+          p_quote->>'client_contact_name', p_quote->>'client_contact_title',
+          p_quote->>'client_email', p_quote->>'client_phone',
+          p_quote->>'client_address',
+          p_quote->>'issuer_name', p_quote->>'issuer_email',
+          p_quote->>'issuer_phone',
+          p_quote->>'service_line', p_quote->>'prepared_for_address',
+          COALESCE(NULLIF(p_quote->>'quote_date','')::date, CURRENT_DATE),
+          COALESCE(NULLIF(p_quote->>'valid_until','')::date, CURRENT_DATE + 30),
+          NULLIF(p_quote->>'service_start_date','')::date,
+          NULLIF(p_quote->>'initial_term_months','')::int,
+          p_quote->>'renewal_terms', p_quote->>'cancellation_terms',
+          p_quote->>'billing_cadence', p_quote->>'payment_terms',
+          p_quote->>'price_change_terms', p_quote->>'quote_validity_terms',
+          COALESCE(NULLIF(p_quote->>'currency',''), 'USD'),
+          v_subtotal, v_setup_fee, v_subtotal,
+          COALESCE(p_quote->'scope_groups', '[]'::jsonb),
+          COALESCE(p_quote->'included', '[]'::jsonb),
+          COALESCE(p_quote->'excluded', '[]'::jsonb),
+          p_quote->>'assumptions_note', p_quote->>'notes'
+        ) RETURNING id INTO v_id;
+      ELSE
+        UPDATE public.quotes SET
+          quote_number         = v_number,
+          status               = COALESCE(NULLIF(p_quote->>'status',''), status),
+          client_name          = COALESCE(p_quote->>'client_name',''),
+          client_contact_name  = p_quote->>'client_contact_name',
+          client_contact_title = p_quote->>'client_contact_title',
+          client_email         = p_quote->>'client_email',
+          client_phone         = p_quote->>'client_phone',
+          client_address       = p_quote->>'client_address',
+          issuer_name          = p_quote->>'issuer_name',
+          issuer_email         = p_quote->>'issuer_email',
+          issuer_phone         = p_quote->>'issuer_phone',
+          service_line         = p_quote->>'service_line',
+          prepared_for_address = p_quote->>'prepared_for_address',
+          quote_date           = COALESCE(NULLIF(p_quote->>'quote_date','')::date, quote_date),
+          valid_until          = COALESCE(NULLIF(p_quote->>'valid_until','')::date, valid_until),
+          service_start_date   = NULLIF(p_quote->>'service_start_date','')::date,
+          initial_term_months  = NULLIF(p_quote->>'initial_term_months','')::int,
+          renewal_terms        = p_quote->>'renewal_terms',
+          cancellation_terms   = p_quote->>'cancellation_terms',
+          billing_cadence      = p_quote->>'billing_cadence',
+          payment_terms        = p_quote->>'payment_terms',
+          price_change_terms   = p_quote->>'price_change_terms',
+          quote_validity_terms = p_quote->>'quote_validity_terms',
+          currency             = COALESCE(NULLIF(p_quote->>'currency',''), currency),
+          subtotal             = v_subtotal,
+          setup_fee            = v_setup_fee,
+          total_monthly        = v_subtotal,
+          scope_groups         = COALESCE(p_quote->'scope_groups', '[]'::jsonb),
+          included             = COALESCE(p_quote->'included', '[]'::jsonb),
+          excluded             = COALESCE(p_quote->'excluded', '[]'::jsonb),
+          assumptions_note     = p_quote->>'assumptions_note',
+          notes                = p_quote->>'notes'
+        WHERE id = p_quote_id AND user_id = p_user_id
+        RETURNING id INTO v_id;
+      END IF;
+
+      EXIT;
+    EXCEPTION WHEN unique_violation THEN
+      IF v_supplied OR v_attempt = 8 THEN
+        RAISE;
+      END IF;
+      v_number := NULL;  -- allocate a fresh one and try again
+    END;
+  END LOOP;
+
+  -- Replacing the lines inside this transaction is what makes the delete safe:
+  -- if the insert raises, the delete rolls back with it.
+  DELETE FROM public.quote_line_items WHERE quote_id = v_id;
+
+  INSERT INTO public.quote_line_items
+    (quote_id, position, service_name, description, quantity, unit_price)
+  SELECT
+    v_id,
+    (ord - 1)::int,
+    COALESCE(it->>'service_name', ''),
+    it->>'description',
+    round(COALESCE(NULLIF(it->>'quantity','')::numeric, 0), 2),
+    round(COALESCE(NULLIF(it->>'unit_price','')::numeric, 0), 2)
+  FROM jsonb_array_elements(COALESCE(p_items, '[]'::jsonb)) WITH ORDINALITY AS t(it, ord);
+
+  SELECT to_jsonb(q) || jsonb_build_object(
+           'effective_status', public.quote_effective_status(q.status, q.valid_until),
+           'line_items', COALESCE((
+             SELECT jsonb_agg(to_jsonb(li) ORDER BY li.position)
+               FROM public.quote_line_items li WHERE li.quote_id = q.id
+           ), '[]'::jsonb))
+    INTO v_result
+    FROM public.quotes q WHERE q.id = v_id;
+
+  RETURN v_result;
+END;
+$$;
+
+-- Only the service role may call it; the edge function is the write path.
+REVOKE ALL ON FUNCTION public.save_quote(uuid, text, jsonb, jsonb, uuid)
+  FROM PUBLIC, anon, authenticated;

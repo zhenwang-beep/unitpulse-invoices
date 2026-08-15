@@ -270,18 +270,26 @@ export const QuotePreview = React.forwardRef<HTMLDivElement, QuotePreviewProps>(
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 mb-8 pt-3 border-t border-[#E4E4E7]">
-          <div className="text-sm" style={{ fontFamily: SANS, color: "#71717B" }}>
-            Quote date{" "}
-            <span style={{ color: "#18181B", fontWeight: 600 }}>
+        {/* Label above value, matching the eyebrow idiom used everywhere else —
+            a long date no longer wraps awkwardly behind its own label. */}
+        <div className="grid grid-cols-2 gap-8 mb-8 pt-4 border-t border-[#E4E4E7]">
+          <div>
+            <Eyebrow>Quote date</Eyebrow>
+            <div
+              className="text-sm mt-1"
+              style={{ fontFamily: SANS, fontWeight: 600, color: "#18181B" }}
+            >
               {formatQuoteDate(quote.quoteDate)}
-            </span>
+            </div>
           </div>
-          <div className="text-sm" style={{ fontFamily: SANS, color: "#71717B" }}>
-            Valid until{" "}
-            <span style={{ color: "#18181B", fontWeight: 600 }}>
+          <div>
+            <Eyebrow>Valid until</Eyebrow>
+            <div
+              className="text-sm mt-1"
+              style={{ fontFamily: SANS, fontWeight: 600, color: "#18181B" }}
+            >
               {formatQuoteDate(quote.validUntil)}
-            </span>
+            </div>
           </div>
         </div>
 

@@ -217,9 +217,13 @@ export const toISODate = (d: Date): string => {
 export const newId = (): string =>
   `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 9)}`;
 
-/** UP-YYYY-NNNN, matching the template's UP-2026-0148. */
-export const generateQuoteNumber = (): string =>
-  `UP-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`;
+/**
+ * Quote numbers are allocated by the database on first save, not here.
+ * A browser-side random 4-digit number collides roughly 42% of the time within
+ * 100 quotes against the UNIQUE(user_id, quote_number) constraint; the server
+ * allocates the next number per user and year and retries on conflict.
+ */
+export const QUOTE_NUMBER_PENDING = "";
 
 // ---------------------------------------------------------------------------
 // Template defaults, transcribed from the UnitPulse Service Quote doc.
@@ -314,7 +318,7 @@ export function createEmptyQuote(defaults: QuoteDefaults = DEFAULT_QUOTE_DEFAULT
   const today = toISODate(new Date());
   return {
     id: "",
-    quoteNumber: generateQuoteNumber(),
+    quoteNumber: QUOTE_NUMBER_PENDING,
     status: "draft",
     clientName: "",
     clientContactName: "",
