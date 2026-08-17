@@ -145,6 +145,64 @@ const DEFAULT_QUOTE_DEFAULTS = {
     "This quote assumes the client provides administrative access to the property's social, Google Business, and listing accounts within 5 business days of signature. Delays in access shift the service start date without changing the fee.",
 };
 
+// ---------------------------------------------------------------------------
+// Per-user settings storage.
+//
+// Company settings — name, address, logo and the quote boilerplate — used to
+// live under a single global "company_settings" key, so every account shared
+// one record and any user could rewrite the seller identity printed on
+// everyone else's PDFs. Settings are now keyed per user.
+//
+// The legacy key is still READ as a fallback and is never written or deleted:
+// the first save by an account creates that account's own copy, while the old
+// record keeps serving whoever has not saved yet. That makes the migration
+// lazy — nothing appears to vanish for the account that has been using it.
+//
+// Every settings route derives its keys through these three helpers.
+// ---------------------------------------------------------------------------
+
+const LEGACY_COMPANY_SETTINGS_KEY = "company_settings";
+
+const companySettingsKey = (userId: string) => `user_${userId}_company_settings`;
+
+// Storage folder for one account's logo objects. Two accounts uploading
+// "logo-<timestamp>.png" in the same millisecond land on different keys, so
+// neither can overwrite the other's letterhead.
+const logoFolder = (userId: string) => `user_${userId}/`;
+
+// The caller's own record if it exists, otherwise the shared legacy record.
+const readCompanySettings = async (userId: string) => {
+  const own = await kv.get(companySettingsKey(userId));
+  if (own) return own;
+  return await kv.get(LEGACY_COMPANY_SETTINGS_KEY);
+};
+
+// A client may echo back a logoPath it was handed: one it just uploaded, or
+// the legacy object it inherited through the fallback above. What it may not
+// do is name another account's object, so an unprefixed (legacy) path is
+// accepted and anything under a different user's folder is refused.
+//
+// Traversal is rejected before the prefix is examined, because the prefix on
+// its own does not survive it. The stored path is pasted into the URL that
+// createSignedUrl requests, and a URL parser resolves "." and ".." segments
+// away — percent-escaped ones included — so
+// "user_<self>/../user_<other>/logo-1.png" passes a bare startsWith test and
+// then signs the other account's object. No key this server hands out has an
+// empty, "." or ".." segment, so refusing them costs nothing.
+const ownsLogoPath = (path: string, userId: string) => {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(path);
+  } catch {
+    return false; // A malformed escape is not a key this server ever issued.
+  }
+  const segments = decoded.split("/");
+  if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
+    return false;
+  }
+  return !decoded.startsWith("user_") || decoded.startsWith(logoFolder(userId));
+};
+
 // Stored defaults win field by field; anything absent falls back to the
 // transcribed template. The three list fields are checked explicitly so a
 // malformed stored value can never hand the quote editor a non-array.
@@ -164,7 +222,8 @@ const mergeQuoteDefaults = (stored: any) => {
 // Get company settings
 app.get("/make-server-3c030652/company-settings", requireAuth, async (c) => {
   try {
-    const stored = await kv.get("company_settings");
+    const userId = c.get("userId");
+    const stored = await readCompanySettings(userId);
 
     const settings: Record<string, any> = {
       ...DEFAULT_COMPANY_SETTINGS,
@@ -195,14 +254,22 @@ app.get("/make-server-3c030652/company-settings", requireAuth, async (c) => {
 // future quote inherits. An unauthenticated write would let anyone rewrite it.
 app.post("/make-server-3c030652/company-settings", requireAuth, async (c) => {
   try {
+    const userId = c.get("userId");
     const body = await c.req.json();
     const { companyName, companyAddress, logoPath, companyEmail, companyPhone } = body;
 
     // A caller may send only the company fields (the settings page) or only
     // quoteDefaults (the quote defaults editor). Each field is written only
     // when its key is present, so neither caller clobbers the other's data.
-    const existing = (await kv.get("company_settings")) || {};
+    // The read falls back to the legacy global record, so an account saving
+    // for the first time carries the inherited values into its own copy
+    // instead of resetting the fields it did not send.
+    const existing = (await readCompanySettings(userId)) || {};
     const sent = (key: string) => body && typeof body === "object" && key in body;
+
+    if (sent("logoPath") && logoPath && !ownsLogoPath(String(logoPath), userId)) {
+      return c.json({ error: "Invalid logo path" }, 400);
+    }
 
     const settings: Record<string, any> = {
       ...existing,
@@ -227,7 +294,9 @@ app.post("/make-server-3c030652/company-settings", requireAuth, async (c) => {
       });
     }
 
-    await kv.set("company_settings", settings);
+    // Written to the caller's own key. The legacy record is left untouched so
+    // it stays a fallback for accounts that have not saved yet.
+    await kv.set(companySettingsKey(userId), settings);
 
     // Generate signed URL for the logo
     if (settings.logoPath) {
@@ -253,47 +322,57 @@ app.post("/make-server-3c030652/company-settings", requireAuth, async (c) => {
 // unauthenticated upload is an unauthenticated write to the letterhead.
 app.post("/make-server-3c030652/upload-logo", requireAuth, async (c) => {
   try {
+    const userId = c.get("userId");
     const formData = await c.req.formData();
     const file = formData.get("logo") as File;
-    
+
     if (!file) {
       return c.json({ error: "No file provided" }, 400);
     }
-    
+
     // Validate file type
-    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml"];
-    if (!validTypes.includes(file.type)) {
+    const extensionByType: Record<string, string> = {
+      "image/png": "png",
+      "image/jpeg": "jpg",
+      "image/jpg": "jpg",
+      "image/svg+xml": "svg",
+    };
+    const extension = extensionByType[file.type];
+    if (!extension) {
       return c.json({ error: "Invalid file type. Please upload PNG, JPG, or SVG." }, 400);
     }
-    
+
     // Validate file size (5MB max)
     if (file.size > 5242880) {
       return c.json({ error: "File too large. Maximum size is 5MB." }, 400);
     }
-    
-    // Generate unique filename
+
+    // Unique object key, inside the uploader's own folder. The extension comes
+    // from the validated content type rather than from file.name, which is
+    // caller-supplied and could otherwise carry "../" back out of the folder.
     const timestamp = Date.now();
-    const extension = file.name.split(".").pop();
-    const filename = `logo-${timestamp}.${extension}`;
-    
+    const objectPath = `${logoFolder(userId)}logo-${timestamp}.${extension}`;
+
     // Convert file to array buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = new Uint8Array(arrayBuffer);
-    
+
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(BUCKET_NAME)
-      .upload(filename, buffer, {
+      .upload(objectPath, buffer, {
         contentType: file.type,
         upsert: false,
       });
-    
+
     if (uploadError) {
       console.error("Upload error:", uploadError);
       return c.json({ error: "Failed to upload logo" }, 500);
     }
-    
-    return c.json({ logoPath: uploadData.path });
+
+    // The stored logoPath is what createSignedUrl is later handed, so it must
+    // be the same bucket-relative key that was uploaded, folder included.
+    return c.json({ logoPath: uploadData?.path || objectPath });
   } catch (error) {
     console.error("Error uploading logo:", error);
     return c.json({ error: "Failed to upload logo" }, 500);

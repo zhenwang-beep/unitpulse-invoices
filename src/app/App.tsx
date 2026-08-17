@@ -33,6 +33,17 @@ export interface LineItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  /**
+   * The line total as the SERVER computed it. Written by
+   * create_invoice_from_quote(); absent on a line typed in the browser.
+   *
+   * It exists because Postgres numeric and JavaScript binary floats disagree
+   * even on plain 2-decimal input: 1.01 x 18.50 is 18.69 in the database and
+   * 18.68 in JS, because 18.685 * 100 is 1868.4999999999998. A saved document
+   * must render what was stored, so every renderer prefers this over
+   * multiplying quantity by unitPrice again.
+   */
+  amount?: number;
 }
 
 export interface InvoiceData {
@@ -48,6 +59,20 @@ export interface InvoiceData {
   lineItems: LineItem[];
   taxPercent: number;
   notes: string;
+  /** ISO 4217 code the amounts are in. Absent means USD. */
+  currency?: string;
+  /** Set on an invoice raised from a quote — see quote_invoice_links. */
+  sourceQuoteId?: string;
+  /** The human-readable number of that quote, e.g. "UP-2026-0001". */
+  sourceQuoteNumber?: string;
+  /**
+   * The month this invoice bills for, ISO yyyy-mm-dd. Without it, consecutive
+   * recurring invoices from one quote are indistinguishable documents.
+   */
+  servicePeriodStart?: string;
+  servicePeriodEnd?: string;
+  /** "recurring" or "one_time", as recorded by the server. */
+  invoiceKind?: string;
 }
 
 export interface CompanySettings {
@@ -373,6 +398,14 @@ export function InvoiceGeneratorPage() {
         lineItems: loadedInvoice.lineItems,
         taxPercent: loadedInvoice.taxPercent,
         notes: loadedInvoice.notes,
+        // Carried, not dropped: without these a quote-derived invoice opened
+        // here downloads as "$" with no service period or source quote.
+        currency: loadedInvoice.currency,
+        sourceQuoteId: loadedInvoice.sourceQuoteId,
+        sourceQuoteNumber: loadedInvoice.sourceQuoteNumber,
+        servicePeriodStart: loadedInvoice.servicePeriodStart,
+        servicePeriodEnd: loadedInvoice.servicePeriodEnd,
+        invoiceKind: loadedInvoice.invoiceKind,
       });
       setIsInvoiceSaved(true);
       setIsEditMode(true);
@@ -569,11 +602,19 @@ export function InvoiceGeneratorPage() {
   ) => {
     setInvoiceData((prev) => ({
       ...prev,
-      lineItems: prev.lineItems.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
+      lineItems: prev.lineItems.map((item) => {
+        if (item.id !== id) return item;
+        const next = { ...item, [field]: value };
+        // The server's `amount` describes the quantity and price it was
+        // computed from, and every renderer prefers it over multiplying. Edit
+        // either input and it is no longer this line's total: the PDF would
+        // print "5 x $18.50 = $18.69". Dropping it puts the line back on local
+        // arithmetic until the server totals it again.
+        if (field === "quantity" || field === "unitPrice") delete next.amount;
+        return next;
+      }),
     }));
-    
+
     // Reset saved state when invoice is edited
     setIsInvoiceSaved(false);
   };
@@ -601,8 +642,15 @@ export function InvoiceGeneratorPage() {
   };
 
   const calculateSubtotal = () => {
+    // `amount` is authoritative when present — Postgres numeric and JS floats
+    // disagree even on 2-decimal input (1.01 x 18.50 is 18.69 stored, 18.68
+    // here). Recomputing would make the editor contradict the saved record.
     return invoiceData.lineItems.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
+      (sum, item) =>
+        sum +
+        (typeof item.amount === "number" && Number.isFinite(item.amount)
+          ? item.amount
+          : item.quantity * item.unitPrice),
       0,
     );
   };

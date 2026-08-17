@@ -1,10 +1,20 @@
 import jsPDF from "jspdf";
+import {
+  formatQuoteDate,
+  lineAmount,
+  parseISODate,
+  roundMoney,
+} from "./types/quote";
 
+/** Mirrors the LineItem/InvoiceData declared in App.tsx. Kept local because
+ *  App.tsx imports this module, and importing back would be a cycle. */
 interface LineItem {
   id: string;
   description: string;
   quantity: number;
   unitPrice: number;
+  /** Authoritative line total when present — see displayAmount(). */
+  amount?: number;
 }
 
 interface InvoiceData {
@@ -20,6 +30,12 @@ interface InvoiceData {
   lineItems: LineItem[];
   taxPercent: number;
   notes: string;
+  currency?: string;
+  sourceQuoteId?: string;
+  sourceQuoteNumber?: string;
+  servicePeriodStart?: string;
+  servicePeriodEnd?: string;
+  invoiceKind?: string;
 }
 
 interface CompanySettings {
@@ -31,6 +47,59 @@ interface CompanySettings {
 
 /** Same embedded faces as the quote export, so the two documents match. */
 const SANS = "Manrope";
+
+/**
+ * What a line is worth, in one place.
+ *
+ * `amount` is what the database computed and stored, and it wins whenever it
+ * is there: Postgres numeric and JavaScript binary floats disagree even on
+ * plain 2-decimal input — 1.01 x 18.50 is 18.69 in the database and 18.68 in
+ * JS, because 18.685 * 100 is 1868.4999999999998. A downloaded PDF is a copy
+ * of a stored record, so it must print what was stored. The multiplication is
+ * only the fallback, for a hand-entered line the server has never totalled.
+ */
+const displayAmount = (item: LineItem): number =>
+  typeof item.amount === "number" && Number.isFinite(item.amount)
+    ? roundMoney(item.amount)
+    : lineAmount(item);
+
+/**
+ * The one place an amount becomes text. Every "$" in this document comes from
+ * here, so a EUR invoice cannot pick up a dollar sign from a stray template
+ * string. Non-USD prints the ISO code instead of a symbol ("EUR 399.00"),
+ * because the same glyph means different money in different countries.
+ *
+ * Zero is money and prints as 0.00; the em-dash is reserved for an amount that
+ * is genuinely unknown.
+ */
+const moneyIn = (currency?: string) => {
+  const code = (currency || "").trim().toUpperCase() || "USD";
+  return (n: number | null | undefined): string => {
+    if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+    const value = roundMoney(Number(n)).toFixed(2);
+    return code === "USD" ? `$${value}` : `${code} ${value}`;
+  };
+};
+
+/**
+ * "August 1 – August 31, 2026" for a period inside one year, otherwise both
+ * years spelled out. Returns null when neither end is a usable date, so the
+ * caller can drop the line entirely rather than print an empty label.
+ */
+const servicePeriodRange = (
+  start?: string,
+  end?: string,
+): string | null => {
+  const from = parseISODate(start);
+  const to = parseISODate(end);
+  if (!from && !to) return null;
+  const sameYear =
+    from && to && from.getFullYear() === to.getFullYear();
+  const fromLabel = sameYear
+    ? from!.toLocaleDateString("en-US", { month: "long", day: "numeric" })
+    : formatQuoteDate(start);
+  return `${fromLabel} – ${formatQuoteDate(end)}`;
+};
 
 export async function generateInvoicePDF(
   invoiceData: InvoiceData,
@@ -60,6 +129,8 @@ export async function generateInvoicePDF(
   const pageHeight = 792;
   const margin = 48;
   let yPos = margin;
+
+  const money = moneyIn(invoiceData.currency);
 
   // Helper to add text
   const addText = (
@@ -254,6 +325,42 @@ export async function generateInvoicePDF(
     },
   );
 
+  // Which month this invoice is for. Recurring invoices raised from the same
+  // quote are otherwise identical documents with different numbers, and the
+  // client has no way to tell August's from September's.
+  const servicePeriod = servicePeriodRange(
+    invoiceData.servicePeriodStart,
+    invoiceData.servicePeriodEnd,
+  );
+  if (servicePeriod) {
+    metaY += 15;
+    addText(
+      `Service period: ${servicePeriod}`,
+      pageWidth - margin,
+      metaY,
+      {
+        size: 9,
+        color: "#71717B",
+        align: "right",
+      },
+    );
+  }
+
+  // Provenance, so the client can match the charge to the quote they signed.
+  if (invoiceData.sourceQuoteNumber) {
+    metaY += 15;
+    addText(
+      `Raised from quote ${invoiceData.sourceQuoteNumber}`,
+      pageWidth - margin,
+      metaY,
+      {
+        size: 9,
+        color: "#71717B",
+        align: "right",
+      },
+    );
+  }
+
   yPos = Math.max(invoiceTitleY + 50, metaY + 32);
 
   // === FROM / BILL TO ===
@@ -431,12 +538,12 @@ export async function generateInvoicePDF(
       size: 9,
       align: "center",
     });
-    addText(`$${item.unitPrice.toFixed(2)}`, col3X, yPos + 16, {
+    addText(money(item.unitPrice), col3X, yPos + 16, {
       size: 9,
       align: "right",
     });
     addText(
-      `$${(item.quantity * item.unitPrice).toFixed(2)}`,
+      money(displayAmount(item)),
       col4X,
       yPos + 16,
       { size: 9, align: "right" },
@@ -447,6 +554,31 @@ export async function generateInvoicePDF(
 
   yPos += 25;
 
+  const hasRows = invoiceData.lineItems.length > 0;
+
+  // The subtotal has to be the sum of the amounts printed above it, so it is
+  // built from the same displayAmount() values rather than recomputed from
+  // quantity x price. The passed-in subtotal only stands in for a document
+  // with no rows at all.
+  const lineSubtotal = hasRows
+    ? invoiceData.lineItems.reduce(
+        (sum, item) => roundMoney(sum + displayAmount(item)),
+        0,
+      )
+    : subtotal;
+
+  // And the tax and the total have to be the tax and total OF that subtotal.
+  // The caller derives both from a subtotal of its own, which is the same
+  // number wherever the stored line amounts were respected — the invoice list
+  // passes what the server computed. The editor does not: it multiplies
+  // quantity by price, so a quote-derived invoice downloaded from there would
+  // print "Subtotal 68.69 / Tax 0.00 / Total Due 68.68" and not add up.
+  const linePercent = Number(invoiceData.taxPercent) || 0;
+  const lineTax = hasRows
+    ? roundMoney((lineSubtotal * linePercent) / 100)
+    : tax;
+  const lineTotal = hasRows ? roundMoney(lineSubtotal + lineTax) : total;
+
   // === SUMMARY ===
   const summaryWidth = 256;
   const summaryX = pageWidth - margin - summaryWidth;
@@ -455,7 +587,7 @@ export async function generateInvoicePDF(
     size: 9,
     color: "#71717B",
   });
-  addText(`$${subtotal.toFixed(2)}`, pageWidth - margin, yPos, {
+  addText(money(lineSubtotal), pageWidth - margin, yPos, {
     size: 9,
     align: "right",
   });
@@ -465,7 +597,7 @@ export async function generateInvoicePDF(
     size: 9,
     color: "#71717B",
   });
-  addText(`$${tax.toFixed(2)}`, pageWidth - margin, yPos, {
+  addText(money(lineTax), pageWidth - margin, yPos, {
     size: 9,
     align: "right",
   });
@@ -480,7 +612,7 @@ export async function generateInvoicePDF(
     style: "bold",
   });
   addText(
-    `$${total.toFixed(2)}`,
+    money(lineTotal),
     pageWidth - margin,
     yPos + 3,
     {

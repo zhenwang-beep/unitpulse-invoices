@@ -72,7 +72,15 @@ const STATUS_CHIP: Record<EffectiveQuoteStatus, string> = {
   expired: "bg-white border-[#E4E4E7] text-[#71717B]",
 };
 
-type StatusFilter = "all" | QuoteStatus;
+/**
+ * What the filter offers, which is what the table can DISPLAY — not what can be
+ * stored. `expired` is never a stored status (it is derived from validUntil),
+ * but it is the chip a lapsed quote wears, so a filter built from the storable
+ * four could not select the rows the user can plainly see.
+ */
+const FILTER_STATUSES: EffectiveQuoteStatus[] = [...QUOTE_STATUSES, "expired"];
+
+type StatusFilter = "all" | EffectiveQuoteStatus;
 
 const SANS = "Manrope, sans-serif";
 
@@ -145,22 +153,128 @@ const firstOfCurrentMonth = (): string => {
 };
 
 /**
- * The last day of the service period, computed the way Postgres computes it:
- * `start + interval '1 month' - interval '1 day'`, where adding a month clamps
- * to the length of the target month. Plain JS arithmetic does not clamp —
+ * `start + interval '1 month'`, clamped to the length of the target month the
+ * way Postgres clamps it. Plain JS arithmetic does not clamp —
  * new Date(2026, 0, 31 + 31) rolls Jan 31 into early March — so a period
- * starting on the 31st would be shown ending days after what the server
- * actually stores. Display only; the stored value is the record.
+ * starting on the 31st would be shown running days past what the server
+ * actually stores.
  */
-const servicePeriodEnd = (startISO: string): string => {
+const addOneMonth = (startISO: string): string => {
   const start = parseISODate(startISO);
-  if (!start) return "";
+  if (!start) return startISO;
   const y = start.getFullYear();
   const m = start.getMonth() + 1;
   const daysInTarget = new Date(y, m + 1, 0).getDate();
-  const end = new Date(y, m, Math.min(start.getDate(), daysInTarget));
+  return toISODate(new Date(y, m, Math.min(start.getDate(), daysInTarget)));
+};
+
+/**
+ * The last day of the service period, computed the way Postgres computes it:
+ * `start + interval '1 month' - interval '1 day'`. Display only; the stored
+ * value is the record.
+ */
+const servicePeriodEnd = (startISO: string): string => {
+  const end = parseISODate(addOneMonth(startISO));
+  if (!end) return "";
   end.setDate(end.getDate() - 1);
   return toISODate(end);
+};
+
+/**
+ * A period's identity is its start date: UNIQUE (quote_id,
+ * service_period_start) means one invoice per month per quote, so two rows
+ * sharing a start are the same invoice however each arrived — one from the
+ * list route in camelCase, one straight off the RPC in snake_case.
+ */
+const linkKey = (link: QuoteInvoiceLink): string =>
+  link.servicePeriodStart || link.invoiceKey || link.invoiceNumber;
+
+const mergeLinks = (
+  base: QuoteInvoiceLink[],
+  extra: QuoteInvoiceLink[],
+): QuoteInvoiceLink[] => {
+  const byPeriod = new Map(base.map((link) => [linkKey(link), link]));
+  for (const link of extra) byPeriod.set(linkKey(link), link);
+  return Array.from(byPeriod.values()).sort((a, b) =>
+    a.servicePeriodStart.localeCompare(b.servicePeriodStart),
+  );
+};
+
+/**
+ * The first month at or after `fromISO` that this quote has not been billed
+ * for. Walks forward a month at a time rather than jumping to "last + 1", so a
+ * gap left by a skipped month is offered before the end of the run. Capped
+ * because a malformed date would otherwise never advance.
+ */
+const nextUnbilledPeriod = (
+  fromISO: string,
+  billed: ReadonlySet<string>,
+): string => {
+  let candidate = fromISO;
+  for (let i = 0; i < 120 && billed.has(candidate); i++) {
+    const next = addOneMonth(candidate);
+    if (next === candidate) break;
+    candidate = next;
+  }
+  return candidate;
+};
+
+/** Everything focusable by Tab, in document order. */
+const TABBABLE =
+  'a[href],area[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])';
+
+const tabbablesIn = (root: HTMLElement): HTMLElement[] =>
+  Array.from(root.querySelectorAll<HTMLElement>(TABBABLE)).filter(
+    (el) =>
+      !el.hasAttribute("disabled") &&
+      el.tabIndex >= 0 &&
+      el.getClientRects().length > 0,
+  );
+
+/**
+ * The toast region, which is exempt from the treatment below. It is the only
+ * channel this page has for saying what just happened, and the create-invoice
+ * dialog raises toasts carrying actions of their own while it stays open — an
+ * inert one would announce nothing and click nowhere.
+ */
+const LIVE_REGION = "[data-sonner-toaster],[aria-live]";
+
+const isLiveRegion = (el: Element): boolean =>
+  el.matches(LIVE_REGION) || Boolean(el.querySelector(LIVE_REGION));
+
+/**
+ * Make everything outside `el` inert for as long as a dialog is open, and
+ * return the undo. `aria-modal` alone is a promise to assistive tech that the
+ * browser does not enforce: without this, Tab still walks the page behind the
+ * overlay, and a screen reader still reads the table through it.
+ *
+ * Walks up from the dialog marking each ancestor's other children, and restores
+ * exactly what it changed — an element that was already inert stays inert, and
+ * an aria-hidden that was already set keeps its own value.
+ */
+const inertOthers = (el: HTMLElement): (() => void) => {
+  const changed: Array<{ node: HTMLElement; ariaHidden: string | null }> = [];
+  let node: HTMLElement | null = el;
+  while (node && node !== document.body && node.parentElement) {
+    const parent: HTMLElement = node.parentElement;
+    for (const sibling of Array.from(parent.children)) {
+      if (sibling === node) continue;
+      if (!(sibling instanceof HTMLElement)) continue;
+      if (isLiveRegion(sibling)) continue;
+      if (sibling.hasAttribute("inert")) continue;
+      changed.push({ node: sibling, ariaHidden: sibling.getAttribute("aria-hidden") });
+      sibling.setAttribute("inert", "");
+      sibling.setAttribute("aria-hidden", "true");
+    }
+    node = parent;
+  }
+  return () => {
+    for (const { node: el2, ariaHidden } of changed) {
+      el2.removeAttribute("inert");
+      if (ariaHidden === null) el2.removeAttribute("aria-hidden");
+      else el2.setAttribute("aria-hidden", ariaHidden);
+    }
+  };
 };
 
 /** "Mark as sent" / "Move back to draft" — a verb, not a bare status name. */
@@ -378,6 +492,18 @@ function StatusMenu({
       onClose(true);
       return;
     }
+    /**
+     * Tab leaves the menu, so the menu closes with it. The items are
+     * `tabIndex={-1}` and the menu is portalled to the end of the body, so a Tab
+     * that was allowed to stand would strand focus somewhere the user never
+     * asked to be while an orphaned menu hung over the table. Focus goes back to
+     * the chip, and the default Tab then carries on from there — into the row's
+     * own actions, exactly as if the menu had never been opened.
+     */
+    if (e.key === "Tab") {
+      onClose(true);
+      return;
+    }
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
     e.preventDefault();
     const menu = menuRef.current;
@@ -459,16 +585,20 @@ function StatusMenu({
 function CreateInvoiceModal({
   quote,
   seedLinks,
+  opener,
   onLinksChange,
   onClose,
   onViewInvoices,
 }: {
   quote: Quote;
   seedLinks?: QuoteInvoiceLink[];
+  /** The control that opened this, to hand focus back to when it closes. */
+  opener?: HTMLElement | null;
   onLinksChange: (quoteId: string, links: QuoteInvoiceLink[]) => void;
   onClose: () => void;
   onViewInvoices: () => void;
 }) {
+  const overlayRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   const [links, setLinks] = useState<QuoteInvoiceLink[] | null>(seedLinks ?? null);
@@ -487,6 +617,30 @@ function CreateInvoiceModal({
 
   useEffect(() => {
     cardRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  /**
+   * The page behind an aria-modal dialog must not be reachable at all, and
+   * focus must go back where it came from when the dialog leaves.
+   *
+   * One effect, because the two cleanups are ordered: focus() on an element
+   * inside an inert subtree does nothing at all, so the background has to be
+   * released before the opener can take focus back. Split in two, the order
+   * would depend on which effect happened to be declared first.
+   *
+   * The opener is read once, on mount, and only refocused if it is still in the
+   * document — the row's button is gone entirely if the list reloaded while the
+   * dialog was open, and focusing a detached node drops focus onto the body.
+   */
+  const openerRef = useRef<HTMLElement | null>(opener ?? null);
+  useEffect(() => {
+    const overlay = overlayRef.current;
+    const release = overlay ? inertOthers(overlay) : null;
+    return () => {
+      release?.();
+      const el = openerRef.current;
+      if (el && el.isConnected) el.focus({ preventScroll: true });
+    };
   }, []);
 
   useEffect(() => {
@@ -551,35 +705,64 @@ function CreateInvoiceModal({
       }
 
       // Not an error: asking twice for the same month is exactly what the
-      // unique constraint is there to absorb. Name the invoice that already
-      // covers it and let the user decide.
-      if (payload?.alreadyExists) {
-        const existing = normalizeLink(payload.link);
-        toast.info(
-          `That service period is already invoiced as ${orDash(existing.invoiceNumber)}`,
-          {
-            description: `Nothing was billed twice. Pick a different service period to bill the next month.`,
-            action: { label: "View invoices", onClick: onViewInvoices },
-          },
-        );
-      } else {
-        const invoice = payload?.invoice ?? payload;
-        const number =
-          invoice?.invoiceId ?? invoice?.invoiceNumber ?? invoice?.invoice_number ?? "";
-        toast.success(`Invoice ${orDash(number)} created`, {
-          description: `Billed to ${orDash(quote.clientName)} for the service period starting ${formatQuoteDate(periodStart)}.`,
-          action: { label: "View invoices", onClick: onViewInvoices },
-        });
-      }
+      // unique constraint is there to absorb, and the server hands back the
+      // invoice that already covers it.
+      const existing = payload?.alreadyExists ? normalizeLink(payload.link) : null;
 
       // Refresh the billing history either way, so the row indicator and the
       // initial/recurring decision are correct next time.
+      let fetched: QuoteInvoiceLink[] | null = null;
       try {
         const after = await fetchAPI(`/quotes/${quote.id}/invoices`);
-        if (after.ok) onLinksChange(quote.id, readLinks(await after.json()));
+        if (after.ok) fetched = readLinks(await after.json());
       } catch (error) {
         console.error("Error refreshing quote invoices:", error);
       }
+      // The returned link is authoritative even when the refresh did not land —
+      // but only if it carries something to identify it. An empty one would
+      // list a row of em-dashes as though a month had been billed to nobody.
+      const merged = mergeLinks(
+        fetched ?? links ?? [],
+        existing && linkKey(existing) ? [existing] : [],
+      );
+      onLinksChange(quote.id, merged);
+
+      if (existing) {
+        /**
+         * A success, so it does not end the task. The dialog stays open with
+         * the invoice that already covers this month now listed above, and the
+         * period moved on to the first month this quote has NOT been billed
+         * for — the next thing the user was going to do anyway, one click away
+         * instead of a reopen and a re-pick.
+         */
+        setLinks(merged);
+        setLinksFailed(fetched === null);
+        const billed = new Set(merged.map((l) => l.servicePeriodStart));
+        // The server has just said this month is taken; that stands even if the
+        // link it returned was too thin to say so itself.
+        billed.add(periodStart);
+        const next = nextUnbilledPeriod(periodStart, billed);
+        setPeriodStart(next);
+        toast.info(
+          `That service period is already invoiced as ${orDash(existing.invoiceNumber)}`,
+          {
+            description:
+              next === periodStart
+                ? "Nothing was billed twice. Pick a service period that has not been billed yet."
+                : `Nothing was billed twice. The service period has moved on to ${formatQuoteDate(next)} — the next month this quote has not been billed for.`,
+            action: { label: "View invoices", onClick: onViewInvoices },
+          },
+        );
+        return;
+      }
+
+      const invoice = payload?.invoice ?? payload;
+      const number =
+        invoice?.invoiceId ?? invoice?.invoiceNumber ?? invoice?.invoice_number ?? "";
+      toast.success(`Invoice ${orDash(number)} created`, {
+        description: `Billed to ${orDash(quote.clientName)} for the service period starting ${formatQuoteDate(periodStart)}.`,
+        action: { label: "View invoices", onClick: onViewInvoices },
+      });
       onClose();
     } catch (error) {
       console.error("Error creating invoice from quote:", error);
@@ -589,8 +772,52 @@ function CreateInvoiceModal({
     }
   };
 
+  /**
+   * Escape closes; Tab cycles within the dialog and never behind it.
+   *
+   * Both run on the React tree rather than on document, which is what makes
+   * them cooperate with the DateField: its popover is portalled to
+   * document.body but is still a React child of this card, so its own Escape
+   * handler stops the event and closes the calendar first. For the same reason
+   * a Tab pressed inside that popover arrives here — and is left alone, since
+   * the popover is outside this card in the DOM and orders its own contents.
+   */
+  const onCardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Escape") {
+      if (submitting) return;
+      e.preventDefault();
+      onClose();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    const card = cardRef.current;
+    if (!card) return;
+    const active = document.activeElement as HTMLElement | null;
+    const loose = !active || active === document.body;
+    // Focus is in a portalled descendant — the calendar. Its Tab order is its
+    // own business, and the popover is the last thing in the document anyway.
+    if (!loose && active !== card && !card.contains(active)) return;
+    const items = tabbablesIn(card);
+    if (items.length === 0) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    // The card is focused on mount and sits before all of its children, so a
+    // forward Tab from it already lands on `first`; only backwards needs help.
+    const atStart = loose || active === card;
+    if (e.shiftKey) {
+      if (atStart || active === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (loose || active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   return (
     <div
+      ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       // Outside click. The date popovers are portalled to document.body, so
       // they are never a target here and picking a day cannot close the modal.
@@ -604,15 +831,7 @@ function CreateInvoiceModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-invoice-title"
-        // Escape on the React tree, not on document: an open DateField popover
-        // stops the event itself, so Escape closes the calendar first and the
-        // modal only once the calendar is shut.
-        onKeyDown={(e) => {
-          if (e.key === "Escape" && !submitting) {
-            e.preventDefault();
-            onClose();
-          }
-        }}
+        onKeyDown={onCardKeyDown}
         className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto focus:outline-none"
       >
         <div className="flex items-start justify-between gap-4 mb-1">
@@ -895,7 +1114,11 @@ export default function QuoteManagement() {
 
   // Billing
   const [invoiceLinks, setInvoiceLinks] = useState<Record<string, QuoteInvoiceLink[]>>({});
-  const [invoiceQuoteId, setInvoiceQuoteId] = useState<string | null>(null);
+  /** The opener travels with the target so the dialog can hand focus back. */
+  const [invoiceTarget, setInvoiceTarget] = useState<{
+    quoteId: string;
+    opener: HTMLElement | null;
+  } | null>(null);
 
   const [companySettings, setCompanySettings] = useState<CompanySettings>({
     companyName: "UnitPulse",
@@ -1034,6 +1257,8 @@ export default function QuoteManagement() {
       !query ||
       (quote.quoteNumber || "").toLowerCase().includes(query) ||
       (quote.clientName || "").toLowerCase().includes(query);
+    // Matched against the status on the chip, not the one in the row: those
+    // differ for every lapsed quote, and the chip is what the user is filtering.
     const matchesStatus = statusFilter === "all" || displayStatus(quote) === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -1114,8 +1339,13 @@ export default function QuoteManagement() {
         return;
       }
 
+      // Any other refusal is ambiguous about the database: a 5xx from the edge
+      // or a proxy can arrive after the transition has already committed, so
+      // "it failed" is only ever a claim about the response. Re-read rather
+      // than leave a row that may now contradict the record.
       if (!response.ok) {
         toast.error(errorMessage(payload, "Failed to update the quote status"));
+        await fetchQuotes();
         return;
       }
 
@@ -1138,8 +1368,11 @@ export default function QuoteManagement() {
         }
       }
     } catch (error) {
+      // A thrown request says even less than a failed one — the move may have
+      // been committed and only the answer lost. Same treatment.
       console.error("Error updating quote status:", error);
       toast.error("Failed to update the quote status");
+      await fetchQuotes();
     } finally {
       setStatusPending(quote.id, false);
     }
@@ -1235,8 +1468,8 @@ export default function QuoteManagement() {
   const confirmQuote = confirmTransition
     ? quotes.find((q) => q.id === confirmTransition.quoteId) ?? null
     : null;
-  const invoiceQuote = invoiceQuoteId
-    ? quotes.find((q) => q.id === invoiceQuoteId) ?? null
+  const invoiceQuote = invoiceTarget
+    ? quotes.find((q) => q.id === invoiceTarget.quoteId) ?? null
     : null;
 
   return (
@@ -1386,7 +1619,7 @@ export default function QuoteManagement() {
                       className={`w-full text-left px-3 py-2 rounded text-sm transition-colors cursor-pointer ${statusFilter === "all" ? "bg-[#E8F4F0] text-[#006045]" : "hover:bg-[#FAFAFA]"}`}
                       style={{ fontFamily: SANS }}
                     >All Statuses</button>
-                    {QUOTE_STATUSES.map((status) => (
+                    {FILTER_STATUSES.map((status) => (
                       <button
                         key={status}
                         onClick={() => { setStatusFilter(status); setShowStatusFilter(false); }}
@@ -1517,7 +1750,10 @@ export default function QuoteManagement() {
                         <div className="flex items-center justify-end gap-1">
                           {canInvoice && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); setInvoiceQuoteId(quote.id); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInvoiceTarget({ quoteId: quote.id, opener: e.currentTarget });
+                              }}
                               disabled={pending}
                               title="Create invoice"
                               aria-label={`Create an invoice from quote ${orDash(quote.quoteNumber)}`}
@@ -1635,8 +1871,9 @@ export default function QuoteManagement() {
           key={invoiceQuote.id}
           quote={invoiceQuote}
           seedLinks={invoiceLinks[invoiceQuote.id]}
+          opener={invoiceTarget?.opener ?? null}
           onLinksChange={setLinksFor}
-          onClose={() => setInvoiceQuoteId(null)}
+          onClose={() => setInvoiceTarget(null)}
           onViewInvoices={() => navigate("/")}
         />
       )}
